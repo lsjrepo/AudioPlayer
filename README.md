@@ -3,7 +3,7 @@ This is an embedded audio player based on Stm32F407.
 And it Support mp3, wav, ape, flac and other formats of audio, support sd card, 
 support USB, support Chinese and other fonts, you can display the current song through the OLED message information.
 
-![image](https://github.com/roninCoderJ/AudioPlayer/new/master/Pic/aa.jpg)
+![image](https://github.com/roninCoderJ/AudioPlayer/Pic/aa.jpg)
 
 Development environment：
 mdk5.10
