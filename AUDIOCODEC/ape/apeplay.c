@@ -10,58 +10,54 @@
 #include "wm8978.h"
 #include "audioplay.h"
 //////////////////////////////////////////////////////////////////////////////////	 
-//±¾³ÌĞòÒÆÖ²×ÔRockBoxµÄape½âÂë¿â
-//ALIENTEK STM32F407¿ª·¢°å
-//APE ½âÂë´úÂë	   
-//ÕıµãÔ­×Ó@ALIENTEK
-//¼¼ÊõÂÛÌ³:www.openedv.com
-//´´½¨ÈÕÆÚ:2014/6/29
-//°æ±¾£ºV1.0
+//æœ¬ç¨‹åºç§»æ¤è‡ªRockBoxçš„apeè§£ç åº“
+//ALIENTEK STM32F407å¼€å‘æ¿
+//APE è§£ç ä»£ç 	   
 //********************************************************************************
-//V1.0 ËµÃ÷
-//1,Ö§³Ö16Î»µ¥ÉùµÀ/Á¢ÌåÉùapeµÄ½âÂë
-//2,×î¸ßÖ§³Ö96KµÄAPE¸ñÊ½(LV1Á÷³©,LV2Ğ¡¿¨)
-//3,LV1~LV3,ÔÚ48K¼°ÒÔÏÂÁ÷³©²¥·Å,LV4,LV5´ó¿¨.
-//4,¶ÔÄ³Ğ©apeÎÄ¼ş,¿ÉÄÜ²»Ö§³Ö,ÇëÓÃMonkey's AudioÈí¼ş½øĞĞ×ª»»Ò»ÏÂ,¼´¿ÉÕı³£²¥·Å
+//V1.0 è¯´æ˜
+//1,æ”¯æŒ16ä½å•å£°é“/ç«‹ä½“å£°apeçš„è§£ç 
+//2,æœ€é«˜æ”¯æŒ96Kçš„APEæ ¼å¼(LV1æµç•…,LV2å°å¡)
+//3,LV1~LV3,åœ¨48KåŠä»¥ä¸‹æµç•…æ’­æ”¾,LV4,LV5å¤§å¡.
+//4,å¯¹æŸäº›apeæ–‡ä»¶,å¯èƒ½ä¸æ”¯æŒ,è¯·ç”¨Monkey's Audioè½¯ä»¶è¿›è¡Œè½¬æ¢ä¸€ä¸‹,å³å¯æ­£å¸¸æ’­æ”¾
 ////////////////////////////////////////////////////////////////////////////////// 	 
  
-__apectrl * apectrl;	//APE²¥·Å¿ØÖÆ½á¹¹Ìå
+__apectrl * apectrl;	//APEæ’­æ”¾æ§åˆ¶ç»“æ„ä½“
 
-//apedecoder.cÀïÃæĞèÒªµÄÊı×é 
-extern filter_int *filterbuf64;		//ĞèÒª2816×Ö½Ú 
+//apedecoder.cé‡Œé¢éœ€è¦çš„æ•°ç»„ 
+extern filter_int *filterbuf64;		//éœ€è¦2816å­—èŠ‚ 
 	
-vu8 apetransferend=0;	//i2s´«ÊäÍê³É±êÖ¾
-vu8 apewitchbuf=0;		//i2sbufxÖ¸Ê¾±êÖ¾
+vu8 apetransferend=0;	//i2sä¼ è¾“å®Œæˆæ ‡å¿—
+vu8 apewitchbuf=0;		//i2sbufxæŒ‡ç¤ºæ ‡å¿—
 
-//APE DMA·¢ËÍ»Øµ÷º¯Êı
+//APE DMAå‘é€å›è°ƒå‡½æ•°
 void ape_i2s_dma_tx_callback(void) 
 {    
 	u16 i;
 	if(DMA1_Stream4->CR&(1<<19))
 	{
 		apewitchbuf=0;
-		if((audiodev.status&0X01)==0)//ÔİÍ£ÁË,Ìî³ä0
+		if((audiodev.status&0X01)==0)//æš‚åœäº†,å¡«å……0
 		{
 			for(i=0;i<APE_BLOCKS_PER_LOOP*4;i++)audiodev.i2sbuf1[i]=0;
 		}
 	}else 
 	{
 		apewitchbuf=1;
-		if((audiodev.status&0X01)==0)//ÔİÍ£ÁË,Ìî³ä0
+		if((audiodev.status&0X01)==0)//æš‚åœäº†,å¡«å……0
 		{
 			for(i=0;i<APE_BLOCKS_PER_LOOP*4;i++)audiodev.i2sbuf2[i]=0;
 		}
 	} 
 	apetransferend=1;
 } 
-//Ìî³äPCMÊı¾İµ½DAC
-//buf:PCMÊı¾İÊ×µØÖ·
-//size:pcmÊı¾İÁ¿(16Î»Îªµ¥Î») 
+//å¡«å……PCMæ•°æ®åˆ°DAC
+//buf:PCMæ•°æ®é¦–åœ°å€
+//size:pcmæ•°æ®é‡(16ä½ä¸ºå•ä½) 
 void ape_fill_buffer(u16* buf,u16 size)
 {
 	u16 i; 
 	u16 *p;
-	while(apetransferend==0)delay_ms(1000/200u);//µÈ´ı´«ÊäÍê³É
+	while(apetransferend==0)delay_ms(1000/200u);//ç­‰å¾…ä¼ è¾“å®Œæˆ
 	apetransferend=0;
 	if(apewitchbuf==0)
 	{
@@ -72,28 +68,28 @@ void ape_fill_buffer(u16* buf,u16 size)
 	}
 	for(i=0;i<size;i++)p[i]=buf[i];
 } 
-//µÃµ½µ±Ç°²¥·ÅÊ±¼ä
-//fx:ÎÄ¼şÖ¸Õë
-//apectrl:apectrl²¥·Å¿ØÖÆÆ÷
+//å¾—åˆ°å½“å‰æ’­æ”¾æ—¶é—´
+//fx:æ–‡ä»¶æŒ‡é’ˆ
+//apectrl:apectrlæ’­æ”¾æ§åˆ¶å™¨
 void ape_get_curtime(FIL*fx,__apectrl *apectrl)
 {
 	long long fpos=0;  	 
-	if(fx->fptr>apectrl->datastart)fpos=fx->fptr-apectrl->datastart;	//µÃµ½µ±Ç°ÎÄ¼ş²¥·Åµ½µÄµØ·½ 
-	apectrl->cursec=fpos*apectrl->totsec/(fx->fsize-apectrl->datastart);	//µ±Ç°²¥·Åµ½µÚ¶àÉÙÃëÁË?	
+	if(fx->fptr>apectrl->datastart)fpos=fx->fptr-apectrl->datastart;	//å¾—åˆ°å½“å‰æ–‡ä»¶æ’­æ”¾åˆ°çš„åœ°æ–¹ 
+	apectrl->cursec=fpos*apectrl->totsec/(fx->fsize-apectrl->datastart);	//å½“å‰æ’­æ”¾åˆ°ç¬¬å¤šå°‘ç§’äº†?	
 }  
-//apeÎÄ¼ş¿ì½ø¿ìÍËº¯Êı
-//pos:ĞèÒª¶¨Î»µ½µÄÎÄ¼şÎ»ÖÃ
-//·µ»ØÖµ:µ±Ç°ÎÄ¼şÎ»ÖÃ(¼´¶¨Î»ºóµÄ½á¹û)
+//apeæ–‡ä»¶å¿«è¿›å¿«é€€å‡½æ•°
+//pos:éœ€è¦å®šä½åˆ°çš„æ–‡ä»¶ä½ç½®
+//è¿”å›å€¼:å½“å‰æ–‡ä»¶ä½ç½®(å³å®šä½åçš„ç»“æœ)
 u32 ape_file_seek(u32 pos)
 { 
-	return audiodev.file->fptr;//apeÎÄ¼ş²»Ö§³Ö¿ì½ø¿ìÍË,Ö±½Ó·µ»Øµ±Ç°²¥·ÅÎ»ÖÃ
+	return audiodev.file->fptr;//apeæ–‡ä»¶ä¸æ”¯æŒå¿«è¿›å¿«é€€,ç›´æ¥è¿”å›å½“å‰æ’­æ”¾ä½ç½®
 }
-//²¥·ÅÒ»ÇúFLACÒôÀÖ
-//fname:FLACÎÄ¼şÂ·¾¶.
-//·µ»ØÖµ:0,Õı³£²¥·ÅÍê³É
-//[b7]:0,Õı³£×´Ì¬;1,´íÎó×´Ì¬
-//[b6:0]:b7=0Ê±,±íÊ¾²Ù×÷Âë 
-//       b7=1Ê±,±íÊ¾ÓĞ´íÎó(ÕâÀï²»ÅĞ¶¨¾ßÌå´íÎó,0X80~0XFF,¶¼ËãÊÇ´íÎó)
+//æ’­æ”¾ä¸€æ›²FLACéŸ³ä¹
+//fname:FLACæ–‡ä»¶è·¯å¾„.
+//è¿”å›å€¼:0,æ­£å¸¸æ’­æ”¾å®Œæˆ
+//[b7]:0,æ­£å¸¸çŠ¶æ€;1,é”™è¯¯çŠ¶æ€
+//[b6:0]:b7=0æ—¶,è¡¨ç¤ºæ“ä½œç  
+//       b7=1æ—¶,è¡¨ç¤ºæœ‰é”™è¯¯(è¿™é‡Œä¸åˆ¤å®šå…·ä½“é”™è¯¯,0X80~0XFF,éƒ½ç®—æ˜¯é”™è¯¯)
 u8 ape_play_song(u8* fname) 
 {
 	struct ape_ctx_t *apex; 
@@ -123,29 +119,29 @@ u8 ape_play_song(u8* fname)
 	audiodev.i2sbuf2=mymalloc(SRAMIN,APE_BLOCKS_PER_LOOP*4);  
 	audiodev.file_seek=ape_file_seek;
 	buffer=mymalloc(SRAMIN,APE_FILE_BUF_SZ);
-	if(filterbuf64&&apectrl&&apex&&decoded0&&decoded1&&audiodev.file&&audiodev.i2sbuf1&&audiodev.i2sbuf2&&buffer)//ËùÓĞÄÚ´æÉêÇë¶¼OK.
+	if(filterbuf64&&apectrl&&apex&&decoded0&&decoded1&&audiodev.file&&audiodev.i2sbuf1&&audiodev.i2sbuf2&&buffer)//æ‰€æœ‰å†…å­˜ç”³è¯·éƒ½OK.
 	{ 
 		memset(apex,0,sizeof(struct ape_ctx_t));
 		memset(apectrl,0,sizeof(__apectrl));
 		memset(audiodev.i2sbuf1,0,APE_BLOCKS_PER_LOOP*4);
 		memset(audiodev.i2sbuf2,0,APE_BLOCKS_PER_LOOP*4);		
-		f_open(audiodev.file,(char*)fname,FA_READ);		//´ò¿ªÎÄ¼ş
-		res=ape_parseheader(audiodev.file,apex);//·ÖÎöapeÎÄ¼şÍ· 
+		f_open(audiodev.file,(char*)fname,FA_READ);		//æ‰“å¼€æ–‡ä»¶
+		res=ape_parseheader(audiodev.file,apex);//åˆ†æapeæ–‡ä»¶å¤´ 
 		if(res==0)
 		{  
 			if((apex->compressiontype>3000)||(apex->fileversion<APE_MIN_VERSION)||(apex->fileversion>APE_MAX_VERSION||apex->bps!=16))
 			{
-				res=AP_ERR;//Ñ¹ËõÂÊ²»Ö§³Ö/°æ±¾²»Ö§³Ö/²»ÊÇ16Î»ÒôÆµ¸ñÊ½
+				res=AP_ERR;//å‹ç¼©ç‡ä¸æ”¯æŒ/ç‰ˆæœ¬ä¸æ”¯æŒ/ä¸æ˜¯16ä½éŸ³é¢‘æ ¼å¼
 			}else
 			{
-				apectrl->bps=apex->bps;					//µÃµ½²ÉÑùÉî¶È(ape,ÎÒÃÇ½öÖ§³Ö16Î»)
-				apectrl->samplerate=apex->samplerate;	//µÃµ½²ÉÑùÂÊ,apeÖ§³Ö48KhzÒÔÏÂµÄ²ÉÑùÂÊ,ÔÚ¸ß¾Í¿ÉÄÜ¿¨ÁË...
+				apectrl->bps=apex->bps;					//å¾—åˆ°é‡‡æ ·æ·±åº¦(ape,æˆ‘ä»¬ä»…æ”¯æŒ16ä½)
+				apectrl->samplerate=apex->samplerate;	//å¾—åˆ°é‡‡æ ·ç‡,apeæ”¯æŒ48Khzä»¥ä¸‹çš„é‡‡æ ·ç‡,åœ¨é«˜å°±å¯èƒ½å¡äº†...
 				if(apex->totalframes>1)totalsamples=apex->finalframeblocks+apex->blocksperframe*(apex->totalframes-1);
 				else totalsamples=apex->finalframeblocks;
-				apectrl->totsec=totalsamples/apectrl->samplerate;//µÃµ½ÎÄ¼ş×ÜÊ±³¤ 
-				apectrl->bitrate=(audiodev.file->fsize-apex->firstframe)*8/apectrl->totsec;//µÃµ½Î»ËÙ
-				apectrl->outsamples=APE_BLOCKS_PER_LOOP*2;//PCMÊä³öÊı¾İÁ¿(16Î»Îªµ¥Î») 
-				apectrl->datastart=apex->firstframe;	//µÃµ½µÚÒ»Ö¡µÄµØÖ·	 
+				apectrl->totsec=totalsamples/apectrl->samplerate;//å¾—åˆ°æ–‡ä»¶æ€»æ—¶é•¿ 
+				apectrl->bitrate=(audiodev.file->fsize-apex->firstframe)*8/apectrl->totsec;//å¾—åˆ°ä½é€Ÿ
+				apectrl->outsamples=APE_BLOCKS_PER_LOOP*2;//PCMè¾“å‡ºæ•°æ®é‡(16ä½ä¸ºå•ä½) 
+				apectrl->datastart=apex->firstframe;	//å¾—åˆ°ç¬¬ä¸€å¸§çš„åœ°å€	 
 			}
 		}
 	}
@@ -157,30 +153,30 @@ u8 ape_play_song(u8* fname)
 		printf("  Duration: %d s\r\n",apectrl->totsec);
 		printf("  Bitrate: %d kbps\r\n",apectrl->bitrate); 
  		//ape_dumpinfo(apex);
- 		WM8978_I2S_Cfg(2,0);	//·ÉÀûÆÖ±ê×¼,16Î»Êı¾İ³¤¶È
-		I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_16bextended);		//·ÉÀûÆÖ±ê×¼,Ö÷»ú·¢ËÍ,Ê±ÖÓµÍµçÆ½ÓĞĞ§,16Î»À©Õ¹Ö¡³¤¶È
-		I2S2_SampleRate_Set(apex->samplerate);		//ÉèÖÃ²ÉÑùÂÊ 
-		I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,APE_BLOCKS_PER_LOOP*2);//ÅäÖÃTX DMA
-		i2s_tx_callback=ape_i2s_dma_tx_callback;	//»Øµ÷º¯ÊıÖ¸Ïòmp3_i2s_dma_tx_callback				
+ 		WM8978_I2S_Cfg(2,0);	//é£åˆ©æµ¦æ ‡å‡†,16ä½æ•°æ®é•¿åº¦
+		I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_16bextended);		//é£åˆ©æµ¦æ ‡å‡†,ä¸»æœºå‘é€,æ—¶é’Ÿä½ç”µå¹³æœ‰æ•ˆ,16ä½æ‰©å±•å¸§é•¿åº¦
+		I2S2_SampleRate_Set(apex->samplerate);		//è®¾ç½®é‡‡æ ·ç‡ 
+		I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,APE_BLOCKS_PER_LOOP*2);//é…ç½®TX DMA
+		i2s_tx_callback=ape_i2s_dma_tx_callback;	//å›è°ƒå‡½æ•°æŒ‡å‘mp3_i2s_dma_tx_callback				
  		currentframe=0; 
 		f_lseek(audiodev.file,apex->firstframe); 
 		res=f_read(audiodev.file,buffer,APE_FILE_BUF_SZ,(u32*)&bytesinbuffer);	
 		firstbyte=3;  		//Take account of the little-endian 32-bit byte ordering
 		readptr=buffer;
 		audio_start(); 
-		while(currentframe<apex->totalframes&&res==0)//»¹ÓĞÎ´½âÂëµÄÖ¡?
+		while(currentframe<apex->totalframes&&res==0)//è¿˜æœ‰æœªè§£ç çš„å¸§?
 		{ 
-			//¼ÆËãÒ»Ö¡ÀïÃæÓĞ¶àÉÙ¸öblocks?
+			//è®¡ç®—ä¸€å¸§é‡Œé¢æœ‰å¤šå°‘ä¸ªblocks?
 			if(currentframe==(apex->totalframes-1))nblocks=apex->finalframeblocks;
 			else nblocks=apex->blocksperframe; 
 			apex->currentframeblocks=nblocks; 
-			//³õÊ¼»¯Ö¡½âÂë
+			//åˆå§‹åŒ–å¸§è§£ç 
 			init_frame_decoder(apex,readptr,&firstbyte,&bytesconsumed);
 			readptr+=bytesconsumed;
 			bytesinbuffer-=bytesconsumed; 						
-			while(nblocks>0)//¿ªÊ¼Ö¡½âÂë
+			while(nblocks>0)//å¼€å§‹å¸§è§£ç 
 			{
-				blockstodecode=AUDIO_MIN(APE_BLOCKS_PER_LOOP,nblocks);//»ñµÃÒ»´ÎÒª½âÂëµÄblocks¸öÊı  
+				blockstodecode=AUDIO_MIN(APE_BLOCKS_PER_LOOP,nblocks);//è·å¾—ä¸€æ¬¡è¦è§£ç çš„blocksä¸ªæ•°  
 				res=decode_chunk(apex,readptr,&firstbyte,&bytesconsumed,decoded0,decoded1,blockstodecode);
 				if(res!=0)
 				{
@@ -189,19 +185,19 @@ u8 ape_play_song(u8* fname)
 					break;
 				} 
 				ape_fill_buffer((u16*)decoded1,APE_BLOCKS_PER_LOOP*2);   
-				readptr+=bytesconsumed;			//½âÂëÖ¸ÕëÆ«ÒÆµ½ĞÂÊı¾İÎ»ÖÃ
-				bytesinbuffer-=bytesconsumed; 	//bufferÀïÃæµÄÊı¾İÁ¿¼õÉÙ
-				if(bytesconsumed>4*APE_BLOCKS_PER_LOOP)//³öÏÖ´íÎóÁË
+				readptr+=bytesconsumed;			//è§£ç æŒ‡é’ˆåç§»åˆ°æ–°æ•°æ®ä½ç½®
+				bytesinbuffer-=bytesconsumed; 	//bufferé‡Œé¢çš„æ•°æ®é‡å‡å°‘
+				if(bytesconsumed>4*APE_BLOCKS_PER_LOOP)//å‡ºç°é”™è¯¯äº†
 				{
 					nblocks=0;
 					res=AP_ERR;
 					printf("bytesconsumed:%d\r\n",bytesconsumed);
 				}
-				if(bytesinbuffer<4*APE_BLOCKS_PER_LOOP)//ĞèÒª²¹³äĞÂÊı¾İÁË
+				if(bytesinbuffer<4*APE_BLOCKS_PER_LOOP)//éœ€è¦è¡¥å……æ–°æ•°æ®äº†
 				{ 
 					memmove(buffer,readptr,bytesinbuffer);
 					res=f_read(audiodev.file,buffer+bytesinbuffer,APE_FILE_BUF_SZ-bytesinbuffer,(u32*)&n);
-					if(res)//³ö´íÁË.
+					if(res)//å‡ºé”™äº†.
 					{ 
 						res=AP_ERR;
 						break; 
@@ -209,19 +205,19 @@ u8 ape_play_song(u8* fname)
 					bytesinbuffer+=n;  
 					readptr=buffer;
 				} 
-				nblocks-=blockstodecode;//block¼ÆÊıµİ¼õ
-				while(audiodev.status&(1<<1))//Õı³£²¥·ÅÖĞ
+				nblocks-=blockstodecode;//blockè®¡æ•°é€’å‡
+				while(audiodev.status&(1<<1))//æ­£å¸¸æ’­æ”¾ä¸­
 				{		 
-					ape_get_curtime(audiodev.file,apectrl);//µÃµ½×ÜÊ±¼äºÍµ±Ç°²¥·ÅµÄÊ±¼ä 
-					audiodev.totsec=apectrl->totsec;		//²ÎÊı´«µİ
+					ape_get_curtime(audiodev.file,apectrl);//å¾—åˆ°æ€»æ—¶é—´å’Œå½“å‰æ’­æ”¾çš„æ—¶é—´ 
+					audiodev.totsec=apectrl->totsec;		//å‚æ•°ä¼ é€’
 					audiodev.cursec=apectrl->cursec;
 					audiodev.bitrate=apectrl->bitrate;
 					audiodev.samplerate=apectrl->samplerate;
 					audiodev.bps=apectrl->bps;	 
 					delay_ms(1000/200u);  
-					if(audiodev.status&0X01)break;	//Ã»ÓĞ°´ÏÂÔİÍ£   
+					if(audiodev.status&0X01)break;	//æ²¡æœ‰æŒ‰ä¸‹æš‚åœ   
 				}
-				if((audiodev.status&(1<<1))==0)		//ÇëÇó½áÊø²¥·Å/²¥·ÅÍê³É
+				if((audiodev.status&(1<<1))==0)		//è¯·æ±‚ç»“æŸæ’­æ”¾/æ’­æ”¾å®Œæˆ
 				{  
 					nblocks=0;
 					res=AP_PREV;
