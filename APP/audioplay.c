@@ -13,75 +13,61 @@
 #include "oled.h"
 #include "mp3play.h" 
 #include "flacplay.h" 
-//////////////////////////////////////////////////////////////////////////////////	 
-//±¾³ÌĞòÖ»¹©Ñ§Ï°Ê¹ÓÃ£¬Î´¾­×÷ÕßĞí¿É£¬²»µÃÓÃÓÚÆäËüÈÎºÎÓÃÍ¾
-//ALIENTEK STM32F407¿ª·¢°å
-//ÒôÀÖ²¥·ÅÆ÷ Ó¦ÓÃ´úÂë	   
-//ÕıµãÔ­×Ó@ALIENTEK
-//¼¼ÊõÂÛÌ³:www.openedv.com
-//´´½¨ÈÕÆÚ:2014/5/24
-//°æ±¾£ºV1.0
-//°æÈ¨ËùÓĞ£¬µÁ°æ±Ø¾¿¡£
-//Copyright(C) ¹ãÖİÊĞĞÇÒíµç×Ó¿Æ¼¼ÓĞÏŞ¹«Ë¾ 2014-2024
-//All rights reserved									  
-////////////////////////////////////////////////////////////////////////////////// 	
- 
-
-//ÒôÀÖ²¥·Å¿ØÖÆÆ÷
+//éŸ³ä¹æ’­æ”¾æ§åˆ¶å™¨
 __audiodev audiodev;	  
  
 
-//¿ªÊ¼ÒôÆµ²¥·Å
+//å¼€å§‹éŸ³é¢‘æ’­æ”¾
 void audio_start(void)
 {
-	audiodev.status=3<<0;//¿ªÊ¼²¥·Å+·ÇÔİÍ£
+	audiodev.status=3<<0;//å¼€å§‹æ’­æ”¾+éæš‚åœ
 	I2S_Play_Start();
 } 
-//¹Ø±ÕÒôÆµ²¥·Å
+//å…³é—­éŸ³é¢‘æ’­æ”¾
 void audio_stop(void)
 {
 	audiodev.status=0;
 	I2S_Play_Stop();
 }  
-//µÃµ½pathÂ·¾¶ÏÂ,Ä¿±êÎÄ¼şµÄ×Ü¸öÊı
-//path:Â·¾¶		    
-//·µ»ØÖµ:×ÜÓĞĞ§ÎÄ¼şÊı
+//å¾—åˆ°pathè·¯å¾„ä¸‹,ç›®æ ‡æ–‡ä»¶çš„æ€»ä¸ªæ•°
+//path:è·¯å¾„		    
+//è¿”å›å€¼:æ€»æœ‰æ•ˆæ–‡ä»¶æ•°
 u16 audio_get_tnum(u8 *path)
 {	  
 	u8 res;
 	u16 rval=0;
- 	DIR tdir;	 		//ÁÙÊ±Ä¿Â¼
-	FILINFO tfileinfo;	//ÁÙÊ±ÎÄ¼şĞÅÏ¢		
+ 	DIR tdir;	 		//ä¸´æ—¶ç›®å½•
+	FILINFO tfileinfo;	//ä¸´æ—¶æ–‡ä»¶ä¿¡æ¯		
 	u8 *fn; 			 			   			     
-    res=f_opendir(&tdir,(const TCHAR*)path); //´ò¿ªÄ¿Â¼
-  	tfileinfo.lfsize=_MAX_LFN*2+1;						//³¤ÎÄ¼şÃû×î´ó³¤¶È
-	tfileinfo.lfname=mymalloc(SRAMIN,tfileinfo.lfsize);	//Îª³¤ÎÄ¼ş»º´æÇø·ÖÅäÄÚ´æ
+    res=f_opendir(&tdir,(const TCHAR*)path); //æ‰“å¼€ç›®å½•
+  	tfileinfo.lfsize=_MAX_LFN*2+1;						//é•¿æ–‡ä»¶åæœ€å¤§é•¿åº¦
+	tfileinfo.lfname=mymalloc(SRAMIN,tfileinfo.lfsize);	//ä¸ºé•¿æ–‡ä»¶ç¼“å­˜åŒºåˆ†é…å†…å­˜
 	if(res==FR_OK&&tfileinfo.lfname!=NULL)
 	{
-		while(1)//²éÑ¯×ÜµÄÓĞĞ§ÎÄ¼şÊı
+		while(1)//æŸ¥è¯¢æ€»çš„æœ‰æ•ˆæ–‡ä»¶æ•°
 		{
-	        res=f_readdir(&tdir,&tfileinfo);       		//¶ÁÈ¡Ä¿Â¼ÏÂµÄÒ»¸öÎÄ¼ş
-	        if(res!=FR_OK||tfileinfo.fname[0]==0)break;	//´íÎóÁË/µ½Ä©Î²ÁË,ÍË³ö		  
+	        res=f_readdir(&tdir,&tfileinfo);       		//è¯»å–ç›®å½•ä¸‹çš„ä¸€ä¸ªæ–‡ä»¶
+	        if(res!=FR_OK||tfileinfo.fname[0]==0)break;	//é”™è¯¯äº†/åˆ°æœ«å°¾äº†,é€€å‡º		  
      		fn=(u8*)(*tfileinfo.lfname?tfileinfo.lfname:tfileinfo.fname);			 
 			res=f_typetell(fn);	
-			if((res&0XF0)==0X40)//È¡¸ßËÄÎ»,¿´¿´ÊÇ²»ÊÇÒôÀÖÎÄ¼ş	
+			if((res&0XF0)==0X40)//å–é«˜å››ä½,çœ‹çœ‹æ˜¯ä¸æ˜¯éŸ³ä¹æ–‡ä»¶	
 			{
-				rval++;//ÓĞĞ§ÎÄ¼şÊıÔö¼Ó1
+				rval++;//æœ‰æ•ˆæ–‡ä»¶æ•°å¢åŠ 1
 			}	    
 		}  
 	} 
 	myfree(SRAMIN,tfileinfo.lfname);
 	return rval;
 }
-//ÏÔÊ¾ÇúÄ¿Ë÷Òı
-//index:µ±Ç°Ë÷Òı
-//total:×ÜÎÄ¼şÊı
+//æ˜¾ç¤ºæ›²ç›®ç´¢å¼•
+//index:å½“å‰ç´¢å¼•
+//total:æ€»æ–‡ä»¶æ•°
 void audio_index_show(u16 index,u16 total)
 {
-	//ÏÔÊ¾µ±Ç°ÇúÄ¿µÄË÷Òı,¼°×ÜÇúÄ¿Êı
-//	LCD_ShowxNum(30+0,290,index,3,16,0X80);		//Ë÷Òı
+	//æ˜¾ç¤ºå½“å‰æ›²ç›®çš„ç´¢å¼•,åŠæ€»æ›²ç›®æ•°
+//	LCD_ShowxNum(30+0,290,index,3,16,0X80);		//ç´¢å¼•
 //	LCD_ShowChar(30+24,290,'/',16,0);
-//	LCD_ShowxNum(30+32,290,total,3,16,0X80); 	//×ÜÇúÄ¿		
+//	LCD_ShowxNum(30+32,290,total,3,16,0X80); 	//æ€»æ›²ç›®		
     OLED_ShowNum(30,0,index,3,16);
 	OLED_ShowChar(54,0,'/',16,1);
 	OLED_ShowNum(62,0,total,3,16);
@@ -89,27 +75,27 @@ void audio_index_show(u16 index,u16 total)
 	OLED_Refresh_Gram();
 }
  
-//ÏÔÊ¾²¥·ÅÊ±¼ä,±ÈÌØÂÊ ĞÅÏ¢  
-//totsec;ÒôÆµÎÄ¼ş×ÜÊ±¼ä³¤¶È
-//cursec:µ±Ç°²¥·ÅÊ±¼ä
-//bitrate:±ÈÌØÂÊ(Î»ËÙ)
+//æ˜¾ç¤ºæ’­æ”¾æ—¶é—´,æ¯”ç‰¹ç‡ ä¿¡æ¯  
+//totsec;éŸ³é¢‘æ–‡ä»¶æ€»æ—¶é—´é•¿åº¦
+//cursec:å½“å‰æ’­æ”¾æ—¶é—´
+//bitrate:æ¯”ç‰¹ç‡(ä½é€Ÿ)
 void audio_msg_show(u32 totsec,u32 cursec,u32 bitrate)
 {	
-	static u16 playtime=0XFFFF;//²¥·ÅÊ±¼ä±ê¼Ç	      
-	if(playtime!=cursec)					//ĞèÒª¸üĞÂÏÔÊ¾Ê±¼ä
+	static u16 playtime=0XFFFF;//æ’­æ”¾æ—¶é—´æ ‡è®°	      
+	if(playtime!=cursec)					//éœ€è¦æ›´æ–°æ˜¾ç¤ºæ—¶é—´
 	{
 		playtime=cursec;
-		//ÏÔÊ¾²¥·ÅÊ±¼ä			 
-//		LCD_ShowxNum(30,270,playtime/60,2,16,0X80);		//·ÖÖÓ
+		//æ˜¾ç¤ºæ’­æ”¾æ—¶é—´			 
+//		LCD_ShowxNum(30,270,playtime/60,2,16,0X80);		//åˆ†é’Ÿ
 //		LCD_ShowChar(30+16,270,':',16,0);
-//		LCD_ShowxNum(30+24,270,playtime%60,2,16,0X80);	//ÃëÖÓ		
+//		LCD_ShowxNum(30+24,270,playtime%60,2,16,0X80);	//ç§’é’Ÿ		
 // 		LCD_ShowChar(30+40,270,'/',16,0); 	    	 
-//		//ÏÔÊ¾×ÜÊ±¼ä    	   
-// 		LCD_ShowxNum(30+48,270,totsec/60,2,16,0X80);	//·ÖÖÓ
+//		//æ˜¾ç¤ºæ€»æ—¶é—´    	   
+// 		LCD_ShowxNum(30+48,270,totsec/60,2,16,0X80);	//åˆ†é’Ÿ
 //		LCD_ShowChar(30+64,270,':',16,0);
-//		LCD_ShowxNum(30+72,270,totsec%60,2,16,0X80);	//ÃëÖÓ	  		    
-//		//ÏÔÊ¾Î»ÂÊ			   
-//   		LCD_ShowxNum(30+110,270,bitrate/1000,4,16,0X80);//ÏÔÊ¾Î»ÂÊ	 
+//		LCD_ShowxNum(30+72,270,totsec%60,2,16,0X80);	//ç§’é’Ÿ	  		    
+//		//æ˜¾ç¤ºä½ç‡			   
+//   		LCD_ShowxNum(30+110,270,bitrate/1000,4,16,0X80);//æ˜¾ç¤ºä½ç‡	 
 //		LCD_ShowString(30+110+32,270,200,16,16,"Kbps");	 
 		OLED_ShowNum(0,50,playtime/60,2,12);
 		OLED_ShowChar(12,50,':',12,1);
@@ -123,80 +109,80 @@ void audio_msg_show(u32 totsec,u32 cursec,u32 bitrate)
 		OLED_Refresh_Gram();
 	} 		 
 }
-//²¥·ÅÒôÀÖ
+//æ’­æ”¾éŸ³ä¹
 void audio_play(void)
 {
 	u8 res;
- 	DIR wavdir;	 		//Ä¿Â¼
-	FILINFO wavfileinfo;//ÎÄ¼şĞÅÏ¢
-	u8 *fn;   			//³¤ÎÄ¼şÃû
-	u8 *pname;			//´øÂ·¾¶µÄÎÄ¼şÃû
-	u16 totwavnum; 		//ÒôÀÖÎÄ¼ş×ÜÊı
-	u16 curindex;		//Í¼Æ¬µ±Ç°Ë÷Òı
-	u8 key;				//¼üÖµ		  
+ 	DIR wavdir;	 		//ç›®å½•
+	FILINFO wavfileinfo;//æ–‡ä»¶ä¿¡æ¯
+	u8 *fn;   			//é•¿æ–‡ä»¶å
+	u8 *pname;			//å¸¦è·¯å¾„çš„æ–‡ä»¶å
+	u16 totwavnum; 		//éŸ³ä¹æ–‡ä»¶æ€»æ•°
+	u16 curindex;		//å›¾ç‰‡å½“å‰ç´¢å¼•
+	u8 key;				//é”®å€¼		  
  	u16 temp;
-	u16 *wavindextbl;	//ÒôÀÖË÷Òı±í
+	u16 *wavindextbl;	//éŸ³ä¹ç´¢å¼•è¡¨
 	
-	WM8978_ADDA_Cfg(1,0);	//¿ªÆôDAC
-	WM8978_Input_Cfg(0,0,0);//¹Ø±ÕÊäÈëÍ¨µÀ
-	WM8978_Output_Cfg(1,0);	//¿ªÆôDACÊä³ö   
+	WM8978_ADDA_Cfg(1,0);	//å¼€å¯DAC
+	WM8978_Input_Cfg(0,0,0);//å…³é—­è¾“å…¥é€šé“
+	WM8978_Output_Cfg(1,0);	//å¼€å¯DACè¾“å‡º   
 	
- 	while(f_opendir(&wavdir,"0:/MUSIC"));//´ò¿ªÒôÀÖÎÄ¼ş¼Ğ,Èç¹ûÎÄ¼ş¼Ğ²»´æÔÚ£¬¾Í¿¨ËÀ							  
-	totwavnum=audio_get_tnum("0:/MUSIC"); //µÃµ½×ÜÓĞĞ§ÎÄ¼şÊı			   
-  	wavfileinfo.lfsize=_MAX_LFN*2+1;						//³¤ÎÄ¼şÃû×î´ó³¤¶È
-	wavfileinfo.lfname=mymalloc(SRAMIN,wavfileinfo.lfsize);	//Îª³¤ÎÄ¼ş»º´æÇø·ÖÅäÄÚ´æ
- 	pname=mymalloc(SRAMIN,wavfileinfo.lfsize);				//Îª´øÂ·¾¶µÄÎÄ¼şÃû·ÖÅäÄÚ´æ
- 	wavindextbl=mymalloc(SRAMIN,2*totwavnum);				//ÉêÇë2*totwavnum¸ö×Ö½ÚµÄÄÚ´æ,ÓÃÓÚ´æ·ÅÒôÀÖÎÄ¼şË÷Òı
- 	while(wavfileinfo.lfname==NULL||pname==NULL||wavindextbl==NULL);//ÄÚ´æ·ÖÅä³ö´í£¬¾Í¿¨ËÀ
- 	//¼ÇÂ¼Ë÷Òı
-    res=f_opendir(&wavdir,"0:/MUSIC"); //´ò¿ªÄ¿Â¼
+ 	while(f_opendir(&wavdir,"0:/MUSIC"));//æ‰“å¼€éŸ³ä¹æ–‡ä»¶å¤¹,å¦‚æœæ–‡ä»¶å¤¹ä¸å­˜åœ¨ï¼Œå°±å¡æ­»							  
+	totwavnum=audio_get_tnum("0:/MUSIC"); //å¾—åˆ°æ€»æœ‰æ•ˆæ–‡ä»¶æ•°			   
+  	wavfileinfo.lfsize=_MAX_LFN*2+1;						//é•¿æ–‡ä»¶åæœ€å¤§é•¿åº¦
+	wavfileinfo.lfname=mymalloc(SRAMIN,wavfileinfo.lfsize);	//ä¸ºé•¿æ–‡ä»¶ç¼“å­˜åŒºåˆ†é…å†…å­˜
+ 	pname=mymalloc(SRAMIN,wavfileinfo.lfsize);				//ä¸ºå¸¦è·¯å¾„çš„æ–‡ä»¶ååˆ†é…å†…å­˜
+ 	wavindextbl=mymalloc(SRAMIN,2*totwavnum);				//ç”³è¯·2*totwavnumä¸ªå­—èŠ‚çš„å†…å­˜,ç”¨äºå­˜æ”¾éŸ³ä¹æ–‡ä»¶ç´¢å¼•
+ 	while(wavfileinfo.lfname==NULL||pname==NULL||wavindextbl==NULL);//å†…å­˜åˆ†é…å‡ºé”™ï¼Œå°±å¡æ­»
+ 	//è®°å½•ç´¢å¼•
+    res=f_opendir(&wavdir,"0:/MUSIC"); //æ‰“å¼€ç›®å½•
 	if(res==FR_OK)
 	{
-		curindex=0;//µ±Ç°Ë÷ÒıÎª0
-		while(1)//È«²¿²éÑ¯Ò»±é
+		curindex=0;//å½“å‰ç´¢å¼•ä¸º0
+		while(1)//å…¨éƒ¨æŸ¥è¯¢ä¸€é
 		{
-			temp=wavdir.index;								//¼ÇÂ¼µ±Ç°index
-	        res=f_readdir(&wavdir,&wavfileinfo);       		//¶ÁÈ¡Ä¿Â¼ÏÂµÄÒ»¸öÎÄ¼ş
-	        if(res!=FR_OK||wavfileinfo.fname[0]==0)break;	//´íÎóÁË/µ½Ä©Î²ÁË,ÍË³ö		  
+			temp=wavdir.index;								//è®°å½•å½“å‰index
+	        res=f_readdir(&wavdir,&wavfileinfo);       		//è¯»å–ç›®å½•ä¸‹çš„ä¸€ä¸ªæ–‡ä»¶
+	        if(res!=FR_OK||wavfileinfo.fname[0]==0)break;	//é”™è¯¯äº†/åˆ°æœ«å°¾äº†,é€€å‡º		  
      		fn=(u8*)(*wavfileinfo.lfname?wavfileinfo.lfname:wavfileinfo.fname);			 
 			res=f_typetell(fn);	
-			if((res&0XF0)==0X40)//È¡¸ßËÄÎ»,¿´¿´ÊÇ²»ÊÇÒôÀÖÎÄ¼ş	
+			if((res&0XF0)==0X40)//å–é«˜å››ä½,çœ‹çœ‹æ˜¯ä¸æ˜¯éŸ³ä¹æ–‡ä»¶	
 			{
-				wavindextbl[curindex]=temp;//¼ÇÂ¼Ë÷Òı
+				wavindextbl[curindex]=temp;//è®°å½•ç´¢å¼•
 				curindex++;
 			}	    
 		} 
 	}   
-   	curindex=0;											//´Ó0¿ªÊ¼ÏÔÊ¾
-   	res=f_opendir(&wavdir,(const TCHAR*)"0:/MUSIC"); 	//´ò¿ªÄ¿Â¼
-	while(res==FR_OK)//´ò¿ª³É¹¦
+   	curindex=0;											//ä»0å¼€å§‹æ˜¾ç¤º
+   	res=f_opendir(&wavdir,(const TCHAR*)"0:/MUSIC"); 	//æ‰“å¼€ç›®å½•
+	while(res==FR_OK)//æ‰“å¼€æˆåŠŸ
 	{	
-		dir_sdi(&wavdir,wavindextbl[curindex]);			//¸Ä±äµ±Ç°Ä¿Â¼Ë÷Òı	   
-        res=f_readdir(&wavdir,&wavfileinfo);       		//¶ÁÈ¡Ä¿Â¼ÏÂµÄÒ»¸öÎÄ¼ş
-        if(res!=FR_OK||wavfileinfo.fname[0]==0)break;	//´íÎóÁË/µ½Ä©Î²ÁË,ÍË³ö
+		dir_sdi(&wavdir,wavindextbl[curindex]);			//æ”¹å˜å½“å‰ç›®å½•ç´¢å¼•	   
+        res=f_readdir(&wavdir,&wavfileinfo);       		//è¯»å–ç›®å½•ä¸‹çš„ä¸€ä¸ªæ–‡ä»¶
+        if(res!=FR_OK||wavfileinfo.fname[0]==0)break;	//é”™è¯¯äº†/åˆ°æœ«å°¾äº†,é€€å‡º
      	fn=(u8*)(*wavfileinfo.lfname?wavfileinfo.lfname:wavfileinfo.fname);			 
-		strcpy((char*)pname,"0:/MUSIC/");				//¸´ÖÆÂ·¾¶(Ä¿Â¼)
-		strcat((char*)pname,(const char*)fn);  			//½«ÎÄ¼şÃû½ÓÔÚºóÃæ
-		 OLED_Fill(0,25,128,44,0);					//ÏÈÈ¥µôÇ°Ò»Ê×¸èÃûµÄ²ĞÓ°
-		Show_Str(0,25,128,12,fn,12,0);				//ÏÔÊ¾¸èÇúÃû×Ö 
+		strcpy((char*)pname,"0:/MUSIC/");				//å¤åˆ¶è·¯å¾„(ç›®å½•)
+		strcat((char*)pname,(const char*)fn);  			//å°†æ–‡ä»¶åæ¥åœ¨åé¢
+		 OLED_Fill(0,25,128,44,0);					//å…ˆå»æ‰å‰ä¸€é¦–æ­Œåçš„æ®‹å½±
+		Show_Str(0,25,128,12,fn,12,0);				//æ˜¾ç¤ºæ­Œæ›²åå­— 
 		OLED_Refresh_Gram();
-		audio_index_show(curindex+1,totwavnum);//ÏÔÊ¾ËùÓĞµÄÎÄ¼şÊıÄ¿
-		key=audio_play_song(pname); 			 		//²¥·ÅÕâ¸öÒôÆµÎÄ¼ş
-		if(key==KEY2_PRES)		//ÉÏÒ»Çú
+		audio_index_show(curindex+1,totwavnum);//æ˜¾ç¤ºæ‰€æœ‰çš„æ–‡ä»¶æ•°ç›®
+		key=audio_play_song(pname); 			 		//æ’­æ”¾è¿™ä¸ªéŸ³é¢‘æ–‡ä»¶
+		if(key==KEY2_PRES)		//ä¸Šä¸€æ›²
 		{
 			if(curindex)curindex--;
 			else curindex=totwavnum-1;
- 		}else if(key==KEY0_PRES)//ÏÂÒ»Çú
+ 		}else if(key==KEY0_PRES)//ä¸‹ä¸€æ›²
 		{
 			curindex++;		   	
-			if(curindex>=totwavnum)curindex=0;//µ½Ä©Î²µÄÊ±ºò,×Ô¶¯´ÓÍ·¿ªÊ¼
- 		}else break;	//²úÉúÁË´íÎó 	 
+			if(curindex>=totwavnum)curindex=0;//åˆ°æœ«å°¾çš„æ—¶å€™,è‡ªåŠ¨ä»å¤´å¼€å§‹
+ 		}else break;	//äº§ç”Ÿäº†é”™è¯¯ 	 
 	} 											  
-	myfree(SRAMIN,wavfileinfo.lfname);	//ÊÍ·ÅÄÚ´æ			    
-	myfree(SRAMIN,pname);				//ÊÍ·ÅÄÚ´æ			    
-	myfree(SRAMIN,wavindextbl);			//ÊÍ·ÅÄÚ´æ	 
+	myfree(SRAMIN,wavfileinfo.lfname);	//é‡Šæ”¾å†…å­˜			    
+	myfree(SRAMIN,pname);				//é‡Šæ”¾å†…å­˜			    
+	myfree(SRAMIN,wavindextbl);			//é‡Šæ”¾å†…å­˜	 
 } 
-//²¥·ÅÄ³¸öÒôÆµÎÄ¼ş
+//æ’­æ”¾æŸä¸ªéŸ³é¢‘æ–‡ä»¶
 u8 audio_play_song(u8* fname)
 {
 	u8 res;  
@@ -204,15 +190,15 @@ u8 audio_play_song(u8* fname)
 	switch(res)
 	{
 		case T_WAV:
-			res=wav_play_song(fname);//ÕâÀïÊ¹ÓÃÁËDMA·½Ê½½øĞĞÁË´«Êä
+			res=wav_play_song(fname);//è¿™é‡Œä½¿ç”¨äº†DMAæ–¹å¼è¿›è¡Œäº†ä¼ è¾“
 			break;
 		case T_MP3:
-			res=mp3_play_song(fname);	//²¥·ÅMP3ÎÄ¼ş
+			res=mp3_play_song(fname);	//æ’­æ”¾MP3æ–‡ä»¶
 			break; 
 		case T_FLAC:
-			res=flac_play_song(fname);	//²¥·ÅflacÎÄ¼ş
+			res=flac_play_song(fname);	//æ’­æ”¾flacæ–‡ä»¶
 			break;
-		default://ÆäËûÎÄ¼ş,×Ô¶¯Ìø×ªµ½ÏÂÒ»Çú
+		default://å…¶ä»–æ–‡ä»¶,è‡ªåŠ¨è·³è½¬åˆ°ä¸‹ä¸€æ›²
 			printf("can't play:%s\r\n",fname);
 			res=KEY0_PRES;
 			break;
