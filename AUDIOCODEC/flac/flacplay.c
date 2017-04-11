@@ -9,69 +9,64 @@
 #include "audioplay.h"
 #include "OLED.h"
 //////////////////////////////////////////////////////////////////////////////////	 
-//±¾³ÌĞòÒÆÖ²×ÔRockBoxµÄflac½âÂë¿â
-//ALIENTEK STM32F407¿ª·¢°å
-//FLAC ½âÂë´úÂë	   
-//ÕıµãÔ­×Ó@ALIENTEK
-//¼¼ÊõÂÛÌ³:www.openedv.com
-//´´½¨ÈÕÆÚ:2014/6/29
-//°æ±¾£ºV1.0
+//æœ¬ç¨‹åºç§»æ¤è‡ªRockBoxçš„flacè§£ç åº“
+
 //********************************************************************************
-//V1.0 ËµÃ÷
-//1,Ö§³Ö16/24Î»µ¥ÉùµÀ/Á¢ÌåÉùflacµÄ½âÂë
-//2,×î¸ßÖ§³Ö192K/16bit»ò96K/24bitµÄflac½âÂë  
+//V1.0 è¯´æ˜
+//1,æ”¯æŒ16/24ä½å•å£°é“/ç«‹ä½“å£°flacçš„è§£ç 
+//2,æœ€é«˜æ”¯æŒ192K/16bitæˆ–96K/24bitçš„flacè§£ç   
 ////////////////////////////////////////////////////////////////////////////////// 	 
  
-__flacctrl * flacctrl;	//flac½âÂë¿ØÖÆ½á¹¹Ìå
+__flacctrl * flacctrl;	//flacè§£ç æ§åˆ¶ç»“æ„ä½“
 
  
-//·ÖÎöFLACÎÄ¼ş
-//fx:flacÎÄ¼şÖ¸Õë
-//fc:flac½âÂëÈİÆ÷
-//·µ»ØÖµ:0,·ÖÎö³É¹¦
-//    ÆäËû,´íÎó´úÂë
+//åˆ†æFLACæ–‡ä»¶
+//fx:flacæ–‡ä»¶æŒ‡é’ˆ
+//fc:flacè§£ç å®¹å™¨
+//è¿”å›å€¼:0,åˆ†ææˆåŠŸ
+//    å…¶ä»–,é”™è¯¯ä»£ç 
 u8 flac_init(FIL* fx,__flacctrl* fctrl,FLACContext* fc)
 {
 	FLAC_Tag * flactag;
 	MD_Block_Head *flacblkh;
 	u8 *buf; 
-	u8 endofmetadata=0;			//×îºóÒ»¸ömetadata±ê¼Ç
+	u8 endofmetadata=0;			//æœ€åä¸€ä¸ªmetadataæ ‡è®°
 	int blocklength; 
 	u32 br;
 	u8 res;
 
-	buf=mymalloc(SRAMIN,512);	//ÉêÇë512×Ö½ÚÄÚ´æ
-	if(!buf)return 1;			//ÄÚ´æÉêÇëÊ§°Ü 
-	f_lseek(fx,0);				//Æ«ÒÆµ½ÎÄ¼şÍ·
-	f_read(fx,buf,4,&br);		//¶ÁÈ¡4×Ö½Ú 
-	flactag=(FLAC_Tag*)buf;		//Ç¿ÖÆ×ª»»Îªflac tag±êÇ©
+	buf=mymalloc(SRAMIN,512);	//ç”³è¯·512å­—èŠ‚å†…å­˜
+	if(!buf)return 1;			//å†…å­˜ç”³è¯·å¤±è´¥ 
+	f_lseek(fx,0);				//åç§»åˆ°æ–‡ä»¶å¤´
+	f_read(fx,buf,4,&br);		//è¯»å–4å­—èŠ‚ 
+	flactag=(FLAC_Tag*)buf;		//å¼ºåˆ¶è½¬æ¢ä¸ºflac tagæ ‡ç­¾
 	if(strncmp("fLaC",(char*)flactag->id,4)!=0) 
 	{
-		myfree(SRAMIN,buf);		//ÊÍ·ÅÄÚ´æ
-		return 2;				//·ÇflacÎÄ¼ş
+		myfree(SRAMIN,buf);		//é‡Šæ”¾å†…å­˜
+		return 2;				//éflacæ–‡ä»¶
     } 
     while(!endofmetadata) 
 	{
 		f_read(fx,buf,4,&br);
         if(br<4)break;
 		flacblkh=(MD_Block_Head*)buf;
-		endofmetadata=flacblkh->head&0X80;	//ÅĞ¶ÏÊÇ²»ÊÇ×îºóÒ»¸öblock?
-		blocklength=((u32)flacblkh->size[0]<<16)|((u16)flacblkh->size[1]<<8)|(flacblkh->size[2]);//µÃµ½¿é´óĞ¡
-        if((flacblkh->head&0x7f)==0) 		//head×îµÍ7Î»Îª0,Ôò±íÊ¾ÊÇSTREAMINFO¿é
+		endofmetadata=flacblkh->head&0X80;	//åˆ¤æ–­æ˜¯ä¸æ˜¯æœ€åä¸€ä¸ªblock?
+		blocklength=((u32)flacblkh->size[0]<<16)|((u16)flacblkh->size[1]<<8)|(flacblkh->size[2]);//å¾—åˆ°å—å¤§å°
+        if((flacblkh->head&0x7f)==0) 		//headæœ€ä½7ä½ä¸º0,åˆ™è¡¨ç¤ºæ˜¯STREAMINFOå—
         { 
 			res=f_read(fx,buf,blocklength,&br);
             if(res!=FR_OK)break;  
-            fc->min_blocksize=((u16)buf[0]<<8) |buf[1];					//×îĞ¡¿é´óĞ¡
-            fc->max_blocksize=((u16)buf[2]<<8) |buf[3];					//×î´ó¿é´óĞ¡
-            fc->min_framesize=((u32)buf[4]<<16)|((u16)buf[5]<<8)|buf[6];//×îĞ¡Ö¡´óĞ¡
-            fc->max_framesize=((u32)buf[7]<<16)|((u16)buf[8]<<8)|buf[9];//×î´óÖ¡´óĞ¡
-            fc->samplerate=((u32)buf[10]<<12)|((u16)buf[11]<<4)|((buf[12]&0xf0)>>4);//²ÉÑùÂÊ
-            fc->channels=((buf[12]&0x0e)>>1)+1;							//ÒôÆµÍ¨µÀÊı
-            fc->bps=((((u16)buf[12]&0x01)<<4)|((buf[13]&0xf0)>>4))+1;	//²ÉÑùÎ»Êı16?24?32? 
-            fc->totalsamples=((u32)buf[14]<<24)|((u32)buf[15]<<16)|((u16)buf[16]<<8)|buf[17];//Ò»¸öÉùµÀµÄ×Ü²ÉÑùÊı
+            fc->min_blocksize=((u16)buf[0]<<8) |buf[1];					//æœ€å°å—å¤§å°
+            fc->max_blocksize=((u16)buf[2]<<8) |buf[3];					//æœ€å¤§å—å¤§å°
+            fc->min_framesize=((u32)buf[4]<<16)|((u16)buf[5]<<8)|buf[6];//æœ€å°å¸§å¤§å°
+            fc->max_framesize=((u32)buf[7]<<16)|((u16)buf[8]<<8)|buf[9];//æœ€å¤§å¸§å¤§å°
+            fc->samplerate=((u32)buf[10]<<12)|((u16)buf[11]<<4)|((buf[12]&0xf0)>>4);//é‡‡æ ·ç‡
+            fc->channels=((buf[12]&0x0e)>>1)+1;							//éŸ³é¢‘é€šé“æ•°
+            fc->bps=((((u16)buf[12]&0x01)<<4)|((buf[13]&0xf0)>>4))+1;	//é‡‡æ ·ä½æ•°16?24?32? 
+            fc->totalsamples=((u32)buf[14]<<24)|((u32)buf[15]<<16)|((u16)buf[16]<<8)|buf[17];//ä¸€ä¸ªå£°é“çš„æ€»é‡‡æ ·æ•°
 			fctrl->samplerate=fc->samplerate;
-			fctrl->totsec=(fc->totalsamples/fc->samplerate);//µÃµ½×ÜÊ±¼ä 
-        }else 	//ºöÂÔÆäËûÖ¡µÄ´¦Àí 
+			fctrl->totsec=(fc->totalsamples/fc->samplerate);//å¾—åˆ°æ€»æ—¶é—´ 
+        }else 	//å¿½ç•¥å…¶ä»–å¸§çš„å¤„ç† 
 		{ 
             if(f_lseek(fx,fx->fptr+blocklength)!=FR_OK)
             { 
@@ -80,19 +75,19 @@ u8 flac_init(FIL* fx,__flacctrl* fctrl,FLACContext* fc)
             }
 		}
     } 
-	myfree(SRAMIN,buf);//ÊÍ·ÅÄÚ´æ.
+	myfree(SRAMIN,buf);//é‡Šæ”¾å†…å­˜.
 	if(fctrl->totsec)
 	{
-		fctrl->outsamples=fc->max_blocksize*2;//PCMÊä³öÊı¾İÁ¿(*2,±íÊ¾2¸öÉùµÀµÄÊı¾İÁ¿)
-		fctrl->bps=fc->bps;			//²ÉÑùÎ»Êı(16/24/32)
-		fctrl->datastart=fx->fptr;	//FLACÊı¾İÖ¡¿ªÊ¼µÄµØÖ·
-		fctrl->bitrate=((fx->fsize-fctrl->datastart)*8)/fctrl->totsec;//µÃµ½FLACµÄÎ»ËÙ
-	}else return 4;	//×ÜÊ±¼äÎª0?ÓĞÎÊÌâµÄflacÎÄ¼ş
+		fctrl->outsamples=fc->max_blocksize*2;//PCMè¾“å‡ºæ•°æ®é‡(*2,è¡¨ç¤º2ä¸ªå£°é“çš„æ•°æ®é‡)
+		fctrl->bps=fc->bps;			//é‡‡æ ·ä½æ•°(16/24/32)
+		fctrl->datastart=fx->fptr;	//FLACæ•°æ®å¸§å¼€å§‹çš„åœ°å€
+		fctrl->bitrate=((fx->fsize-fctrl->datastart)*8)/fctrl->totsec;//å¾—åˆ°FLACçš„ä½é€Ÿ
+	}else return 4;	//æ€»æ—¶é—´ä¸º0?æœ‰é—®é¢˜çš„flacæ–‡ä»¶
 	return 0;
 } 
-vu8 flactransferend=0;	//i2s´«ÊäÍê³É±êÖ¾
-vu8 flacwitchbuf=0;		//i2sbufxÖ¸Ê¾±êÖ¾ 
-//FLAC DMA·¢ËÍ»Øµ÷º¯Êı
+vu8 flactransferend=0;	//i2sä¼ è¾“å®Œæˆæ ‡å¿—
+vu8 flacwitchbuf=0;		//i2sbufxæŒ‡ç¤ºæ ‡å¿— 
+//FLAC DMAå‘é€å›è°ƒå‡½æ•°
 void flac_i2s_dma_tx_callback(void) 
 {    
 	u16 i;
@@ -100,7 +95,7 @@ void flac_i2s_dma_tx_callback(void)
 	if(DMA1_Stream4->CR&(1<<19))
 	{
 		flacwitchbuf=0;
-		if((audiodev.status&0X01)==0)//ÔİÍ£ÁË,Ìî³ä0
+		if((audiodev.status&0X01)==0)//æš‚åœäº†,å¡«å……0
 		{ 
 			if(flacctrl->bps==24)size=flacctrl->outsamples*4;
 			else size=flacctrl->outsamples*2;
@@ -109,7 +104,7 @@ void flac_i2s_dma_tx_callback(void)
 	}else 
 	{
 		flacwitchbuf=1;
-		if((audiodev.status&0X01)==0)//ÔİÍ£ÁË,Ìî³ä0
+		if((audiodev.status&0X01)==0)//æš‚åœäº†,å¡«å……0
 		{
 			if(flacctrl->bps==24)size=flacctrl->outsamples*4;
 			else size=flacctrl->outsamples*2;
@@ -118,18 +113,18 @@ void flac_i2s_dma_tx_callback(void)
 	} 
 	flactransferend=1;
 } 
-//µÃµ½µ±Ç°²¥·ÅÊ±¼ä
-//fx:ÎÄ¼şÖ¸Õë
-//flacctrl:flac²¥·Å¿ØÖÆÆ÷
+//å¾—åˆ°å½“å‰æ’­æ”¾æ—¶é—´
+//fx:æ–‡ä»¶æŒ‡é’ˆ
+//flacctrl:flacæ’­æ”¾æ§åˆ¶å™¨
 void flac_get_curtime(FIL*fx,__flacctrl *flacctrl)
 {
 	long long fpos=0;  	 
-	if(fx->fptr>flacctrl->datastart)fpos=fx->fptr-flacctrl->datastart;	//µÃµ½µ±Ç°ÎÄ¼ş²¥·Åµ½µÄµØ·½ 
-	flacctrl->cursec=fpos*flacctrl->totsec/(fx->fsize-flacctrl->datastart);	//µ±Ç°²¥·Åµ½µÚ¶àÉÙÃëÁË?	
+	if(fx->fptr>flacctrl->datastart)fpos=fx->fptr-flacctrl->datastart;	//å¾—åˆ°å½“å‰æ–‡ä»¶æ’­æ”¾åˆ°çš„åœ°æ–¹ 
+	flacctrl->cursec=fpos*flacctrl->totsec/(fx->fsize-flacctrl->datastart);	//å½“å‰æ’­æ”¾åˆ°ç¬¬å¤šå°‘ç§’äº†?	
 }
-//flacÎÄ¼ş¿ì½ø¿ìÍËº¯Êı
-//pos:ĞèÒª¶¨Î»µ½µÄÎÄ¼şÎ»ÖÃ
-//·µ»ØÖµ:µ±Ç°ÎÄ¼şÎ»ÖÃ(¼´¶¨Î»ºóµÄ½á¹û)
+//flacæ–‡ä»¶å¿«è¿›å¿«é€€å‡½æ•°
+//pos:éœ€è¦å®šä½åˆ°çš„æ–‡ä»¶ä½ç½®
+//è¿”å›å€¼:å½“å‰æ–‡ä»¶ä½ç½®(å³å®šä½åçš„ç»“æœ)
 u32 flac_file_seek(u32 pos)
 {
 	if(pos>audiodev.file->fsize)
@@ -139,12 +134,12 @@ u32 flac_file_seek(u32 pos)
 	f_lseek(audiodev.file,pos);
 	return audiodev.file->fptr;
 }
-//²¥·ÅÒ»ÇúFLACÒôÀÖ
-//fname:FLACÎÄ¼şÂ·¾¶.
-//·µ»ØÖµ:0,Õı³£²¥·ÅÍê³É
-//[b7]:0,Õı³£×´Ì¬;1,´íÎó×´Ì¬
-//[b6:0]:b7=0Ê±,±íÊ¾²Ù×÷Âë 
-//       b7=1Ê±,±íÊ¾ÓĞ´íÎó(ÕâÀï²»ÅĞ¶¨¾ßÌå´íÎó,0X80~0XFF,¶¼ËãÊÇ´íÎó)
+//æ’­æ”¾ä¸€æ›²FLACéŸ³ä¹
+//fname:FLACæ–‡ä»¶è·¯å¾„.
+//è¿”å›å€¼:0,æ­£å¸¸æ’­æ”¾å®Œæˆ
+//[b7]:0,æ­£å¸¸çŠ¶æ€;1,é”™è¯¯çŠ¶æ€
+//[b6:0]:b7=0æ—¶,è¡¨ç¤ºæ“ä½œç  
+//       b7=1æ—¶,è¡¨ç¤ºæœ‰é”™è¯¯(è¿™é‡Œä¸åˆ¤å®šå…·ä½“é”™è¯¯,0X80~0XFF,éƒ½ç®—æ˜¯é”™è¯¯)
 u8 flac_play_song(u8* fname) 
 { 
     FLACContext *fc=0; 
@@ -164,29 +159,29 @@ u8 flac_play_song(u8* fname)
 	flacctrl=mymalloc(SRAMIN,sizeof(__flacctrl)); 
 	audiodev.file=(FIL*)mymalloc(SRAMIN,sizeof(FIL));
 	audiodev.file_seek=flac_file_seek;
-	if(!fc||!audiodev.file||!flacctrl)res=1;//ÄÚ´æÉêÇë´íÎó
+	if(!fc||!audiodev.file||!flacctrl)res=1;//å†…å­˜ç”³è¯·é”™è¯¯
 	else
 	{ 
-		memset(fc,0,sizeof(FLACContext));//fcËùÓĞÄÚÈİÇåÁã 
-		res=f_open(audiodev.file,(char*)fname,FA_READ); //¶ÁÈ¡ÎÄ¼ş´íÎó 
+		memset(fc,0,sizeof(FLACContext));//fcæ‰€æœ‰å†…å®¹æ¸…é›¶ 
+		res=f_open(audiodev.file,(char*)fname,FA_READ); //è¯»å–æ–‡ä»¶é”™è¯¯ 
 		if(res==FR_OK)
 		{
-			res=flac_init(audiodev.file,flacctrl,fc);	//flac½âÂë³õÊ¼»¯   
-			if(fc->min_blocksize==fc->max_blocksize&&fc->max_blocksize!=0)//±ØĞëmin_blocksizeµÈÓÚmax_blocksize
+			res=flac_init(audiodev.file,flacctrl,fc);	//flacè§£ç åˆå§‹åŒ–   
+			if(fc->min_blocksize==fc->max_blocksize&&fc->max_blocksize!=0)//å¿…é¡»min_blocksizeç­‰äºmax_blocksize
 			{
-				if(fc->bps==24)	//24Î»ÒôÆµÊı¾İ
+				if(fc->bps==24)	//24ä½éŸ³é¢‘æ•°æ®
 				{	
 					audiodev.i2sbuf1=mymalloc(SRAMIN,fc->max_blocksize*8);
 					audiodev.i2sbuf2=mymalloc(SRAMIN,fc->max_blocksize*8);  
-				}else			//16Î»ÒôÆµÊı¾İ
+				}else			//16ä½éŸ³é¢‘æ•°æ®
 				{
 					audiodev.i2sbuf1=mymalloc(SRAMIN,fc->max_blocksize*4);
 					audiodev.i2sbuf2=mymalloc(SRAMIN,fc->max_blocksize*4); 
 				}
-				buffer=mymalloc(SRAMCCM,fc->max_framesize); 	//ÉêÇë½âÂëÖ¡»º´æ 
+				buffer=mymalloc(SRAMCCM,fc->max_framesize); 	//ç”³è¯·è§£ç å¸§ç¼“å­˜ 
 				decbuf0=mymalloc(SRAMCCM,fc->max_blocksize*4);
 				decbuf1=mymalloc(SRAMCCM,fc->max_blocksize*4);
-			}else res+=1;//²»Ö§³ÖµÄÒôÆµ¸ñÊ½  
+			}else res+=1;//ä¸æ”¯æŒçš„éŸ³é¢‘æ ¼å¼  
 		}
 	}
 	if(buffer&&audiodev.i2sbuf1&&audiodev.i2sbuf2&&decbuf0&&decbuf1&&res==0)
@@ -200,44 +195,44 @@ u8 flac_play_song(u8* fname)
 //		printf("  Total Samples: %lu\r\n",fc->totalsamples);
 //		printf("  Duration: %d s\r\n",flacctrl->totsec);
 //		printf("  Bitrate: %d kbps\r\n",flacctrl->bitrate); 
-		if(flacctrl->bps==24)	//24Î»ÒôÆµÊı¾İ
+		if(flacctrl->bps==24)	//24ä½éŸ³é¢‘æ•°æ®
 		{
-			WM8978_I2S_Cfg(2,2);//·ÉÀûÆÖ±ê×¼,24Î»Êı¾İ³¤¶È
-			I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_24b);	//·ÉÀûÆÖ±ê×¼,Ö÷»ú·¢ËÍ,Ê±ÖÓµÍµçÆ½ÓĞĞ§,24Î»À©Õ¹Ö¡³¤¶È
-			I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,flacctrl->outsamples*2);//ÅäÖÃTX DMA
+			WM8978_I2S_Cfg(2,2);//é£åˆ©æµ¦æ ‡å‡†,24ä½æ•°æ®é•¿åº¦
+			I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_24b);	//é£åˆ©æµ¦æ ‡å‡†,ä¸»æœºå‘é€,æ—¶é’Ÿä½ç”µå¹³æœ‰æ•ˆ,24ä½æ‰©å±•å¸§é•¿åº¦
+			I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,flacctrl->outsamples*2);//é…ç½®TX DMA
 			memset(audiodev.i2sbuf1,0,fc->max_blocksize*8);
 			memset(audiodev.i2sbuf2,0,fc->max_blocksize*8);
-		}else					//16Î»ÒôÆµÊı¾İ
+		}else					//16ä½éŸ³é¢‘æ•°æ®
 		{
-			WM8978_I2S_Cfg(2,0);//·ÉÀûÆÖ±ê×¼,16Î»Êı¾İ³¤¶È
-			I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_16bextended);	//·ÉÀûÆÖ±ê×¼,Ö÷»ú·¢ËÍ,Ê±ÖÓµÍµçÆ½ÓĞĞ§,16Î»À©Õ¹Ö¡³¤¶È	
-			I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,flacctrl->outsamples);//ÅäÖÃTX DMA			
+			WM8978_I2S_Cfg(2,0);//é£åˆ©æµ¦æ ‡å‡†,16ä½æ•°æ®é•¿åº¦
+			I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_16bextended);	//é£åˆ©æµ¦æ ‡å‡†,ä¸»æœºå‘é€,æ—¶é’Ÿä½ç”µå¹³æœ‰æ•ˆ,16ä½æ‰©å±•å¸§é•¿åº¦	
+			I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,flacctrl->outsamples);//é…ç½®TX DMA			
 			memset(audiodev.i2sbuf1,0,fc->max_blocksize*4);
 			memset(audiodev.i2sbuf2,0,fc->max_blocksize*4);
 		}  
-		I2S2_SampleRate_Set(fc->samplerate);		//ÉèÖÃ²ÉÑùÂÊ 
-		i2s_tx_callback=flac_i2s_dma_tx_callback;	//»Øµ÷º¯ÊıÖ¸Ïòflac_i2s_dma_tx_callback
-		f_read(audiodev.file,buffer,fc->max_framesize,&br);//¶ÁÈ¡×î´óÖ¡³¤Êı¾İ		
+		I2S2_SampleRate_Set(fc->samplerate);		//è®¾ç½®é‡‡æ ·ç‡ 
+		i2s_tx_callback=flac_i2s_dma_tx_callback;	//å›è°ƒå‡½æ•°æŒ‡å‘flac_i2s_dma_tx_callback
+		f_read(audiodev.file,buffer,fc->max_framesize,&br);//è¯»å–æœ€å¤§å¸§é•¿æ•°æ®		
 		bytesleft=br;
-		audio_start();					//¿ªÊ¼²¥·Å  
-		fc->decoded0=(int*)decbuf0;		//½âÂëÊı×é0
-		fc->decoded1=(int*)decbuf1;  	//½âÂëÊı×é1 
-		flac_fptr=audiodev.file->fptr;	//¼ÇÂ¼µ±Ç°µÄÎÄ¼şÎ»ÖÃ.
+		audio_start();					//å¼€å§‹æ’­æ”¾  
+		fc->decoded0=(int*)decbuf0;		//è§£ç æ•°ç»„0
+		fc->decoded1=(int*)decbuf1;  	//è§£ç æ•°ç»„1 
+		flac_fptr=audiodev.file->fptr;	//è®°å½•å½“å‰çš„æ–‡ä»¶ä½ç½®.
 		while(bytesleft) 
 		{   
-			while(flactransferend==0)//µÈ´ı´«ÊäÍê³É
+			while(flactransferend==0)//ç­‰å¾…ä¼ è¾“å®Œæˆ
 			{ 
 				delay_ms(1000/200u);
 			};	
-			if(flac_fptr!=audiodev.file->fptr)//ËµÃ÷Íâ²¿ÓĞ½øĞĞÎÄ¼ş¿ì½ø/¿ìÍË²Ù×÷
+			if(flac_fptr!=audiodev.file->fptr)//è¯´æ˜å¤–éƒ¨æœ‰è¿›è¡Œæ–‡ä»¶å¿«è¿›/å¿«é€€æ“ä½œ
 			{
-				if(audiodev.file->fptr<flacctrl->datastart)//ÔÚÊı¾İ¿ªÊ¼Ö®Ç°??
+				if(audiodev.file->fptr<flacctrl->datastart)//åœ¨æ•°æ®å¼€å§‹ä¹‹å‰??
 				{
-					f_lseek(audiodev.file,flacctrl->datastart);//Æ«ÒÆµ½Êı¾İ¿ªÊ¼µÄµØ·½
+					f_lseek(audiodev.file,flacctrl->datastart);//åç§»åˆ°æ•°æ®å¼€å§‹çš„åœ°æ–¹
 				} 
-				f_read(audiodev.file,buffer,fc->max_framesize,&br); //¶ÁÈ¡Ò»¸ö×î´óÖ¡µÄÊı¾İÁ¿
-				bytesleft=flac_seek_frame(buffer,br,fc);		//²éÕÒÖ¡ 
-				if(bytesleft>=0)								//ÕÒµ½ÕıÈ·µÄÖ¡Í·.
+				f_read(audiodev.file,buffer,fc->max_framesize,&br); //è¯»å–ä¸€ä¸ªæœ€å¤§å¸§çš„æ•°æ®é‡
+				bytesleft=flac_seek_frame(buffer,br,fc);		//æŸ¥æ‰¾å¸§ 
+				if(bytesleft>=0)								//æ‰¾åˆ°æ­£ç¡®çš„å¸§å¤´.
 				{
 					f_lseek(audiodev.file,audiodev.file->fptr-fc->max_framesize+bytesleft);
 					f_read(audiodev.file,buffer,fc->max_framesize,&br); 
@@ -249,12 +244,12 @@ u8 flac_play_song(u8* fname)
 			else p8=audiodev.i2sbuf2; 
 			if(fc->bps==24)res=flac_decode_frame24(fc,buffer,bytesleft,(s32*)p8);
 			else res=flac_decode_frame16(fc,buffer,bytesleft,(s16*)p8); 
-			if(res!=0)//½âÂë³ö´íÁË 
+			if(res!=0)//è§£ç å‡ºé”™äº† 
 			{
 				res=AP_ERR;
 				break;
 			}
-			if(fc->bps==24)	//24Î»µÄÊ±ºò,Êı¾İĞèÒªµ¥¶À´¦ÀíÏÂ
+			if(fc->bps==24)	//24ä½çš„æ—¶å€™,æ•°æ®éœ€è¦å•ç‹¬å¤„ç†ä¸‹
 			{ 
 				pbuf=p8;
 				for(i=0;i<fc->blocksize*8;)
@@ -270,7 +265,7 @@ u8 flac_play_song(u8* fname)
 			memmove(buffer,&buffer[consumed],bytesleft-consumed);
 			bytesleft-=consumed; 
 			res=f_read(audiodev.file,&buffer[bytesleft],fc->max_framesize-bytesleft,&br); 
-			if(res)//¶ÁÊı¾İ³ö´íÁË
+			if(res)//è¯»æ•°æ®å‡ºé”™äº†
 			{
 				res=AP_ERR;
 				break;
@@ -279,11 +274,11 @@ u8 flac_play_song(u8* fname)
 			{
 				bytesleft+=br;
 			}
-			flac_fptr=audiodev.file->fptr;	//¼ÇÂ¼µ±Ç°µÄÎÄ¼şÎ»ÖÃ.
-			while(audiodev.status&(1<<1))	//Õı³£²¥·ÅÖĞ
+			flac_fptr=audiodev.file->fptr;	//è®°å½•å½“å‰çš„æ–‡ä»¶ä½ç½®.
+			while(audiodev.status&(1<<1))	//æ­£å¸¸æ’­æ”¾ä¸­
 			{		  
-				flac_get_curtime(audiodev.file,flacctrl);//µÃµ½×ÜÊ±¼äºÍµ±Ç°²¥·ÅµÄÊ±¼ä 
-				audiodev.totsec=flacctrl->totsec;		//²ÎÊı´«µİ
+				flac_get_curtime(audiodev.file,flacctrl);//å¾—åˆ°æ€»æ—¶é—´å’Œå½“å‰æ’­æ”¾çš„æ—¶é—´ 
+				audiodev.totsec=flacctrl->totsec;		//å‚æ•°ä¼ é€’
 				audiodev.cursec=flacctrl->cursec;
 				audiodev.bitrate=flacctrl->bitrate;
 				audiodev.samplerate=flacctrl->samplerate;
@@ -295,7 +290,7 @@ u8 flac_play_song(u8* fname)
 					 if(audiodev.status&0X01)audiodev.status&=~(1<<0);
 					 else audiodev.status|=0X01;
 				}		
-				if(key==KEY2_PRES||key==KEY0_PRES)//ÏÂÒ»Çú/ÉÏÒ»Çú
+				if(key==KEY2_PRES||key==KEY0_PRES)//ä¸‹ä¸€æ›²/ä¸Šä¸€æ›²
 				{
 					  res=key;
 					audiodev.status&=0xfd;
@@ -303,11 +298,11 @@ u8 flac_play_song(u8* fname)
 				}
   				if(audiodev.status&0X01)
 				{	res=KEY0_PRES;
-					break;	//Ã»ÓĞ°´ÏÂÔİÍ£ 
+					break;	//æ²¡æœ‰æŒ‰ä¸‹æš‚åœ 
 				}
 				else delay_ms(1000/200u);
 			}
-			if((audiodev.status&(1<<1))==0)		//ÇëÇó½áÊø²¥·Å/²¥·ÅÍê³É
+			if((audiodev.status&(1<<1))==0)		//è¯·æ±‚ç»“æŸæ’­æ”¾/æ’­æ”¾å®Œæˆ
 			{  
 				break;
 			} 	 
