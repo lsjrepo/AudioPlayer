@@ -9,30 +9,19 @@
 #include "key.h"
 #include "led.h"
 //////////////////////////////////////////////////////////////////////////////////	 
-//±¾³ÌĞòÖ»¹©Ñ§Ï°Ê¹ÓÃ£¬Î´¾­×÷ÕßĞí¿É£¬²»µÃÓÃÓÚÆäËüÈÎºÎÓÃÍ¾
-//ALIENTEK STM32F407¿ª·¢°å
-//WAV ½âÂë´úÂë	   
-//ÕıµãÔ­×Ó@ALIENTEK
-//¼¼ÊõÂÛÌ³:www.openedv.com
-//´´½¨ÈÕÆÚ:2014/6/29
-//°æ±¾£ºV1.0
-//°æÈ¨ËùÓĞ£¬µÁ°æ±Ø¾¿¡£
-//Copyright(C) ¹ãÖİÊĞĞÇÒíµç×Ó¿Æ¼¼ÓĞÏŞ¹«Ë¾ 2014-2024
-//All rights reserved				
-//********************************************************************************
-//V1.0 ËµÃ÷
-//1,Ö§³Ö16Î»/24Î»WAVÎÄ¼ş²¥·Å
-//2,×î¸ß¿ÉÒÔÖ§³Öµ½192K/24bitµÄWAV¸ñÊ½. 
+//V1.0 è¯´æ˜
+//1,æ”¯æŒ16ä½/24ä½WAVæ–‡ä»¶æ’­æ”¾
+//2,æœ€é«˜å¯ä»¥æ”¯æŒåˆ°192K/24bitçš„WAVæ ¼å¼. 
 ////////////////////////////////////////////////////////////////////////////////// 	
  
-__wavctrl wavctrl;		//WAV¿ØÖÆ½á¹¹Ìå
-vu8 wavtransferend=0;	//i2s´«ÊäÍê³É±êÖ¾
-vu8 wavwitchbuf=0;		//i2sbufxÖ¸Ê¾±êÖ¾
+__wavctrl wavctrl;		//WAVæ§åˆ¶ç»“æ„ä½“
+vu8 wavtransferend=0;	//i2sä¼ è¾“å®Œæˆæ ‡å¿—
+vu8 wavwitchbuf=0;		//i2sbufxæŒ‡ç¤ºæ ‡å¿—
  
-//WAV½âÎö³õÊ¼»¯
-//fname:ÎÄ¼şÂ·¾¶+ÎÄ¼şÃû
-//wavx:wav ĞÅÏ¢´æ·Å½á¹¹ÌåÖ¸Õë
-//·µ»ØÖµ:0,³É¹¦;1,´ò¿ªÎÄ¼şÊ§°Ü;2,·ÇWAVÎÄ¼ş;3,DATAÇøÓòÎ´ÕÒµ½.
+//WAVè§£æåˆå§‹åŒ–
+//fname:æ–‡ä»¶è·¯å¾„+æ–‡ä»¶å
+//wavx:wav ä¿¡æ¯å­˜æ”¾ç»“æ„ä½“æŒ‡é’ˆ
+//è¿”å›å€¼:0,æˆåŠŸ;1,æ‰“å¼€æ–‡ä»¶å¤±è´¥;2,éWAVæ–‡ä»¶;3,DATAåŒºåŸŸæœªæ‰¾åˆ°.
 u8 wav_decode_init(u8* fname,__wavctrl* wavx)
 {
 	FIL*ftemp;
@@ -46,31 +35,31 @@ u8 wav_decode_init(u8* fname,__wavctrl* wavx)
 	ChunkDATA *data;
 	ftemp=(FIL*)mymalloc(SRAMIN,sizeof(FIL));
 	buf=mymalloc(SRAMIN,512);
-	if(ftemp&&buf)	//ÄÚ´æÉêÇë³É¹¦
+	if(ftemp&&buf)	//å†…å­˜ç”³è¯·æˆåŠŸ
 	{
-		res=f_open(ftemp,(TCHAR*)fname,FA_READ);//´ò¿ªÎÄ¼ş
+		res=f_open(ftemp,(TCHAR*)fname,FA_READ);//æ‰“å¼€æ–‡ä»¶
 		if(res==FR_OK)
 		{
-			f_read(ftemp,buf,512,&br);	//¶ÁÈ¡512×Ö½ÚÔÚÊı¾İ
-			riff=(ChunkRIFF *)buf;		//»ñÈ¡RIFF¿é
-			if(riff->Format==0X45564157)//ÊÇWAVÎÄ¼ş
+			f_read(ftemp,buf,512,&br);	//è¯»å–512å­—èŠ‚åœ¨æ•°æ®
+			riff=(ChunkRIFF *)buf;		//è·å–RIFFå—
+			if(riff->Format==0X45564157)//æ˜¯WAVæ–‡ä»¶
 			{
-				fmt=(ChunkFMT *)(buf+12);	//»ñÈ¡FMT¿é 
-				fact=(ChunkFACT *)(buf+12+8+fmt->ChunkSize);//¶ÁÈ¡FACT¿é
-				if(fact->ChunkID==0X74636166||fact->ChunkID==0X5453494C)wavx->datastart=12+8+fmt->ChunkSize+8+fact->ChunkSize;//¾ßÓĞfact/LIST¿éµÄÊ±ºò(Î´²âÊÔ)
+				fmt=(ChunkFMT *)(buf+12);	//è·å–FMTå— 
+				fact=(ChunkFACT *)(buf+12+8+fmt->ChunkSize);//è¯»å–FACTå—
+				if(fact->ChunkID==0X74636166||fact->ChunkID==0X5453494C)wavx->datastart=12+8+fmt->ChunkSize+8+fact->ChunkSize;//å…·æœ‰fact/LISTå—çš„æ—¶å€™(æœªæµ‹è¯•)
 				else wavx->datastart=12+8+fmt->ChunkSize;  
-				data=(ChunkDATA *)(buf+wavx->datastart);	//¶ÁÈ¡DATA¿é
-				if(data->ChunkID==0X61746164)//½âÎö³É¹¦!
+				data=(ChunkDATA *)(buf+wavx->datastart);	//è¯»å–DATAå—
+				if(data->ChunkID==0X61746164)//è§£ææˆåŠŸ!
 				{
-					wavx->audioformat=fmt->AudioFormat;		//ÒôÆµ¸ñÊ½
-					wavx->nchannels=fmt->NumOfChannels;		//Í¨µÀÊı
-					wavx->samplerate=fmt->SampleRate;		//²ÉÑùÂÊ
-					wavx->bitrate=fmt->ByteRate*8;			//µÃµ½Î»ËÙ
-					wavx->blockalign=fmt->BlockAlign;		//¿é¶ÔÆë
-					wavx->bps=fmt->BitsPerSample;			//Î»Êı,16/24/32Î»
+					wavx->audioformat=fmt->AudioFormat;		//éŸ³é¢‘æ ¼å¼
+					wavx->nchannels=fmt->NumOfChannels;		//é€šé“æ•°
+					wavx->samplerate=fmt->SampleRate;		//é‡‡æ ·ç‡
+					wavx->bitrate=fmt->ByteRate*8;			//å¾—åˆ°ä½é€Ÿ
+					wavx->blockalign=fmt->BlockAlign;		//å—å¯¹é½
+					wavx->bps=fmt->BitsPerSample;			//ä½æ•°,16/24/32ä½
 					
-					wavx->datasize=data->ChunkSize;			//Êı¾İ¿é´óĞ¡
-					wavx->datastart=wavx->datastart+8;		//Êı¾İÁ÷¿ªÊ¼µÄµØ·½. 
+					wavx->datasize=data->ChunkSize;			//æ•°æ®å—å¤§å°
+					wavx->datastart=wavx->datastart+8;		//æ•°æ®æµå¼€å§‹çš„åœ°æ–¹. 
 					 
 					printf("wavx->audioformat:%d\r\n",wavx->audioformat);
 					printf("wavx->nchannels:%d\r\n",wavx->nchannels);
@@ -80,32 +69,32 @@ u8 wav_decode_init(u8* fname,__wavctrl* wavx)
 					printf("wavx->bps:%d\r\n",wavx->bps);
 					printf("wavx->datasize:%d\r\n",wavx->datasize);
 					printf("wavx->datastart:%d\r\n",wavx->datastart);  
-				}else res=3;//dataÇøÓòÎ´ÕÒµ½.
-			}else res=2;//·ÇwavÎÄ¼ş
+				}else res=3;//dataåŒºåŸŸæœªæ‰¾åˆ°.
+			}else res=2;//éwavæ–‡ä»¶
 			
-		}else res=1;//´ò¿ªÎÄ¼ş´íÎó
+		}else res=1;//æ‰“å¼€æ–‡ä»¶é”™è¯¯
 	}
 	f_close(ftemp);
-	myfree(SRAMIN,ftemp);//ÊÍ·ÅÄÚ´æ
+	myfree(SRAMIN,ftemp);//é‡Šæ”¾å†…å­˜
 	myfree(SRAMIN,buf); 
 	return 0;
 }
 
-//Ìî³äbuf
-//buf:Êı¾İÇø
-//size:Ìî³äÊı¾İÁ¿
-//bits:Î»Êı(16/24)
-//·µ»ØÖµ:¶Áµ½µÄÊı¾İ¸öÊı
+//å¡«å……buf
+//buf:æ•°æ®åŒº
+//size:å¡«å……æ•°æ®é‡
+//bits:ä½æ•°(16/24)
+//è¿”å›å€¼:è¯»åˆ°çš„æ•°æ®ä¸ªæ•°
 u32 wav_buffill(u8 *buf,u16 size,u8 bits)
 {
 	u16 readlen=0;
 	u32 bread;
 	u16 i;
 	u8 *p;
-	if(bits==24)//24bitÒôÆµ,ĞèÒª´¦ÀíÒ»ÏÂ
+	if(bits==24)//24bitéŸ³é¢‘,éœ€è¦å¤„ç†ä¸€ä¸‹
 	{
-		readlen=(size/4)*3;							//´Ë´ÎÒª¶ÁÈ¡µÄ×Ö½ÚÊı
-		f_read(audiodev.file,audiodev.tbuf,readlen,(UINT*)&bread);	//¶ÁÈ¡Êı¾İ
+		readlen=(size/4)*3;							//æ­¤æ¬¡è¦è¯»å–çš„å­—èŠ‚æ•°
+		f_read(audiodev.file,audiodev.tbuf,readlen,(UINT*)&bread);	//è¯»å–æ•°æ®
 		p=audiodev.tbuf;
 		for(i=0;i<size;)
 		{
@@ -115,18 +104,18 @@ u32 wav_buffill(u8 *buf,u16 size,u8 bits)
 			buf[i++]=p[0];
 			p+=3;
 		} 
-		bread=(bread*4)/3;		//Ìî³äºóµÄ´óĞ¡.
+		bread=(bread*4)/3;		//å¡«å……åçš„å¤§å°.
 	}else 
 	{
-		f_read(audiodev.file,buf,size,(UINT*)&bread);//16bitÒôÆµ,Ö±½Ó¶ÁÈ¡Êı¾İ  
-		if(bread<size)//²»¹»Êı¾İÁË,²¹³ä0
+		f_read(audiodev.file,buf,size,(UINT*)&bread);//16bitéŸ³é¢‘,ç›´æ¥è¯»å–æ•°æ®  
+		if(bread<size)//ä¸å¤Ÿæ•°æ®äº†,è¡¥å……0
 		{
 			for(i=bread;i<size-bread;i++)buf[i]=0; 
 		}
 	}
 	return bread;
 }  
-//WAV²¥·ÅÊ±,I2S DMA´«Êä»Øµ÷º¯Êı
+//WAVæ’­æ”¾æ—¶,I2S DMAä¼ è¾“å›è°ƒå‡½æ•°
 void wav_i2s_dma_tx_callback(void) 
 {   
 	u16 i;
@@ -135,9 +124,9 @@ void wav_i2s_dma_tx_callback(void)
 		wavwitchbuf=0;
 		if((audiodev.status&0X01)==0)
 		{
-			for(i=0;i<WAV_I2S_TX_DMA_BUFSIZE;i++)//ÔİÍ£
+			for(i=0;i<WAV_I2S_TX_DMA_BUFSIZE;i++)//æš‚åœ
 			{
-				audiodev.i2sbuf1[i]=0;//Ìî³ä0
+				audiodev.i2sbuf1[i]=0;//å¡«å……0
 			}
 		}
 	}else 
@@ -145,30 +134,30 @@ void wav_i2s_dma_tx_callback(void)
 		wavwitchbuf=1;
 		if((audiodev.status&0X01)==0)
 		{
-			for(i=0;i<WAV_I2S_TX_DMA_BUFSIZE;i++)//ÔİÍ£
+			for(i=0;i<WAV_I2S_TX_DMA_BUFSIZE;i++)//æš‚åœ
 			{
-				audiodev.i2sbuf2[i]=0;//Ìî³ä0
+				audiodev.i2sbuf2[i]=0;//å¡«å……0
 			}
 		}
 	}
 	wavtransferend=1;
 } 
-//µÃµ½µ±Ç°²¥·ÅÊ±¼ä
-//fx:ÎÄ¼şÖ¸Õë
-//wavx:wav²¥·Å¿ØÖÆÆ÷
+//å¾—åˆ°å½“å‰æ’­æ”¾æ—¶é—´
+//fx:æ–‡ä»¶æŒ‡é’ˆ
+//wavx:wavæ’­æ”¾æ§åˆ¶å™¨
 void wav_get_curtime(FIL*fx,__wavctrl *wavx)
 {
 	long long fpos;  	
- 	wavx->totsec=wavx->datasize/(wavx->bitrate/8);	//¸èÇú×Ü³¤¶È(µ¥Î»:Ãë) 
-	fpos=fx->fptr-wavx->datastart; 					//µÃµ½µ±Ç°ÎÄ¼ş²¥·Åµ½µÄµØ·½ 
-	wavx->cursec=fpos*wavx->totsec/wavx->datasize;	//µ±Ç°²¥·Åµ½µÚ¶àÉÙÃëÁË?	
+ 	wavx->totsec=wavx->datasize/(wavx->bitrate/8);	//æ­Œæ›²æ€»é•¿åº¦(å•ä½:ç§’) 
+	fpos=fx->fptr-wavx->datastart; 					//å¾—åˆ°å½“å‰æ–‡ä»¶æ’­æ”¾åˆ°çš„åœ°æ–¹ 
+	wavx->cursec=fpos*wavx->totsec/wavx->datasize;	//å½“å‰æ’­æ”¾åˆ°ç¬¬å¤šå°‘ç§’äº†?	
 }
-//²¥·ÅÄ³¸öWAVÎÄ¼ş
-//fname:wavÎÄ¼şÂ·¾¶.
-//·µ»ØÖµ:
-//KEY0_PRES:ÏÂÒ»Çú
-//KEY1_PRES:ÉÏÒ»Çú
-//ÆäËû:´íÎó
+//æ’­æ”¾æŸä¸ªWAVæ–‡ä»¶
+//fname:wavæ–‡ä»¶è·¯å¾„.
+//è¿”å›å€¼:
+//KEY0_PRES:ä¸‹ä¸€æ›²
+//KEY1_PRES:ä¸Šä¸€æ›²
+//å…¶ä»–:é”™è¯¯
 u8 wav_play_song(u8* fname)
 {
 	u8 key;
@@ -181,54 +170,54 @@ u8 wav_play_song(u8* fname)
 	audiodev.tbuf=mymalloc(SRAMIN,WAV_I2S_TX_DMA_BUFSIZE);
 	if(audiodev.file&&audiodev.i2sbuf1&&audiodev.i2sbuf2&&audiodev.tbuf)
 	{ 
-		res=wav_decode_init(fname,&wavctrl);//µÃµ½ÎÄ¼şµÄĞÅÏ¢
-		if(res==0)//½âÎöÎÄ¼ş³É¹¦
+		res=wav_decode_init(fname,&wavctrl);//å¾—åˆ°æ–‡ä»¶çš„ä¿¡æ¯
+		if(res==0)//è§£ææ–‡ä»¶æˆåŠŸ
 		{
 			if(wavctrl.bps==16)
 			{
-				WM8978_I2S_Cfg(2,0);	//·ÉÀûÆÖ±ê×¼,16Î»Êı¾İ³¤¶È
-				I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_16bextended);		//·ÉÀûÆÖ±ê×¼,Ö÷»ú·¢ËÍ,Ê±ÖÓµÍµçÆ½ÓĞĞ§,16Î»À©Õ¹Ö¡³¤¶È
+				WM8978_I2S_Cfg(2,0);	//é£åˆ©æµ¦æ ‡å‡†,16ä½æ•°æ®é•¿åº¦
+				I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_16bextended);		//é£åˆ©æµ¦æ ‡å‡†,ä¸»æœºå‘é€,æ—¶é’Ÿä½ç”µå¹³æœ‰æ•ˆ,16ä½æ‰©å±•å¸§é•¿åº¦
 			}else if(wavctrl.bps==24)
 			{
-				WM8978_I2S_Cfg(2,2);	//·ÉÀûÆÖ±ê×¼,24Î»Êı¾İ³¤¶È
-				I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_24b);		//·ÉÀûÆÖ±ê×¼,Ö÷»ú·¢ËÍ,Ê±ÖÓµÍµçÆ½ÓĞĞ§,24Î»À©Õ¹Ö¡³¤¶È
+				WM8978_I2S_Cfg(2,2);	//é£åˆ©æµ¦æ ‡å‡†,24ä½æ•°æ®é•¿åº¦
+				I2S2_Init(I2S_Standard_Phillips,I2S_Mode_MasterTx,I2S_CPOL_Low,I2S_DataFormat_24b);		//é£åˆ©æµ¦æ ‡å‡†,ä¸»æœºå‘é€,æ—¶é’Ÿä½ç”µå¹³æœ‰æ•ˆ,24ä½æ‰©å±•å¸§é•¿åº¦
 			}
-			I2S2_SampleRate_Set(wavctrl.samplerate);//ÉèÖÃ²ÉÑùÂÊ
-			I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,WAV_I2S_TX_DMA_BUFSIZE/2); //ÅäÖÃTX DMA
-			i2s_tx_callback=wav_i2s_dma_tx_callback;			//»Øµ÷º¯ÊıÖ¸wav_i2s_dma_callback
+			I2S2_SampleRate_Set(wavctrl.samplerate);//è®¾ç½®é‡‡æ ·ç‡
+			I2S2_TX_DMA_Init(audiodev.i2sbuf1,audiodev.i2sbuf2,WAV_I2S_TX_DMA_BUFSIZE/2); //é…ç½®TX DMA
+			i2s_tx_callback=wav_i2s_dma_tx_callback;			//å›è°ƒå‡½æ•°æŒ‡wav_i2s_dma_callback
 			audio_stop();
-			res=f_open(audiodev.file,(TCHAR*)fname,FA_READ);	//´ò¿ªÎÄ¼ş
+			res=f_open(audiodev.file,(TCHAR*)fname,FA_READ);	//æ‰“å¼€æ–‡ä»¶
 			if(res==0)
 			{
-				f_lseek(audiodev.file, wavctrl.datastart);		//Ìø¹ıÎÄ¼şÍ·
+				f_lseek(audiodev.file, wavctrl.datastart);		//è·³è¿‡æ–‡ä»¶å¤´
 				fillnum=wav_buffill(audiodev.i2sbuf1,WAV_I2S_TX_DMA_BUFSIZE,wavctrl.bps);
 				fillnum=wav_buffill(audiodev.i2sbuf2,WAV_I2S_TX_DMA_BUFSIZE,wavctrl.bps);
-				audio_start();  //²ÉÓÃDMA·½Ê½²¥·ÅÒôÀÖ
+				audio_start();  //é‡‡ç”¨DMAæ–¹å¼æ’­æ”¾éŸ³ä¹
 				while(res==0)
 				{ 
-					while(wavtransferend==0);//µÈ´ıwav´«ÊäÍê³É; 
+					while(wavtransferend==0);//ç­‰å¾…wavä¼ è¾“å®Œæˆ; 
 					wavtransferend=0;
-					if(fillnum!=WAV_I2S_TX_DMA_BUFSIZE)//²¥·Å½áÊø?
+					if(fillnum!=WAV_I2S_TX_DMA_BUFSIZE)//æ’­æ”¾ç»“æŸ?
 					{
 						res=KEY0_PRES;
 						break;
 					} 
- 					if(wavwitchbuf)fillnum=wav_buffill(audiodev.i2sbuf2,WAV_I2S_TX_DMA_BUFSIZE,wavctrl.bps);//Ìî³äbuf2
-					else fillnum=wav_buffill(audiodev.i2sbuf1,WAV_I2S_TX_DMA_BUFSIZE,wavctrl.bps);//Ìî³äbuf1
+ 					if(wavwitchbuf)fillnum=wav_buffill(audiodev.i2sbuf2,WAV_I2S_TX_DMA_BUFSIZE,wavctrl.bps);//å¡«å……buf2
+					else fillnum=wav_buffill(audiodev.i2sbuf1,WAV_I2S_TX_DMA_BUFSIZE,wavctrl.bps);//å¡«å……buf1
 					while(1)
 					{
 						key=KEY_Scan(0); 
-						if(key==WKUP_PRES)//ÔİÍ£
+						if(key==WKUP_PRES)//æš‚åœ
 						{
 							if(audiodev.status&0X01)audiodev.status&=~(1<<0);
 							else audiodev.status|=0X01;  
 						}
-						if(key==KEY2_PRES||key==KEY0_PRES)//ÏÂÒ»Çú/ÉÏÒ»Çú
+						if(key==KEY2_PRES||key==KEY0_PRES)//ä¸‹ä¸€æ›²/ä¸Šä¸€æ›²
 						{
 							res=key;
 							break; 
 						}
-						wav_get_curtime(audiodev.file,&wavctrl);//µÃµ½×ÜÊ±¼äºÍµ±Ç°²¥·ÅµÄÊ±¼ä 
+						wav_get_curtime(audiodev.file,&wavctrl);//å¾—åˆ°æ€»æ—¶é—´å’Œå½“å‰æ’­æ”¾çš„æ—¶é—´ 
 						audio_msg_show(wavctrl.totsec,wavctrl.cursec,wavctrl.bitrate);
 						t++;
 						if(t==20)
@@ -244,10 +233,10 @@ u8 wav_play_song(u8* fname)
 			}else res=0XFF; 
 		}else res=0XFF;
 	}else res=0XFF; 
-	myfree(SRAMIN,audiodev.tbuf);	//ÊÍ·ÅÄÚ´æ
-	myfree(SRAMIN,audiodev.i2sbuf1);//ÊÍ·ÅÄÚ´æ
-	myfree(SRAMIN,audiodev.i2sbuf2);//ÊÍ·ÅÄÚ´æ 
-	myfree(SRAMIN,audiodev.file);	//ÊÍ·ÅÄÚ´æ 
+	myfree(SRAMIN,audiodev.tbuf);	//é‡Šæ”¾å†…å­˜
+	myfree(SRAMIN,audiodev.i2sbuf1);//é‡Šæ”¾å†…å­˜
+	myfree(SRAMIN,audiodev.i2sbuf2);//é‡Šæ”¾å†…å­˜ 
+	myfree(SRAMIN,audiodev.file);	//é‡Šæ”¾å†…å­˜ 
 	return res;
 } 
 	
