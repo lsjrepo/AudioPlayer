@@ -14,34 +14,29 @@
 #include "text.h"	 
 #include "wm8978.h"	 
 #include "audioplay.h"	
-//ALIENTEK Ì½Ë÷ÕßSTM32F407¿ª·¢°å ÊµÑé43
-//ÒôÀÖ²¥·ÅÆ÷ ÊµÑé -¿âº¯Êı°æ±¾
-//¼¼ÊõÖ§³Ö£ºwww.openedv.com
-//ÌÔ±¦µêÆÌ£ºhttp://eboard.taobao.com
-//¹ãÖİÊĞĞÇÒíµç×Ó¿Æ¼¼ÓĞÏŞ¹«Ë¾    
-//×÷Õß£ºÕıµãÔ­×Ó @ALIENTEK 
+
 
  
 int main(void)
 {        
  
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//ÉèÖÃÏµÍ³ÖĞ¶ÏÓÅÏÈ¼¶·Ö×é2
-	delay_init(168);  //³õÊ¼»¯ÑÓÊ±º¯Êı
-	uart_init(115200);		//³õÊ¼»¯´®¿Ú²¨ÌØÂÊÎª115200
-	LED_Init();					//³õÊ¼»¯LED 
-	usmart_dev.init(84);		//³õÊ¼»¯USMART
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//è®¾ç½®ç³»ç»Ÿä¸­æ–­ä¼˜å…ˆçº§åˆ†ç»„2
+	delay_init(168);  //åˆå§‹åŒ–å»¶æ—¶å‡½æ•°
+	uart_init(115200);		//åˆå§‹åŒ–ä¸²å£æ³¢ç‰¹ç‡ä¸º115200
+	LED_Init();					//åˆå§‹åŒ–LED 
+	usmart_dev.init(84);		//åˆå§‹åŒ–USMART
  	OLED_Init();			
- 	KEY_Init();					//°´¼ü³õÊ¼»¯  
-	W25QXX_Init();				//³õÊ¼»¯W25Q128
-	WM8978_Init();				//³õÊ¼»¯WM8978
-	WM8978_HPvol_Set(40,40);	//¶ú»úÒôÁ¿ÉèÖÃ
-	WM8978_SPKvol_Set(50);		//À®°ÈÒôÁ¿ÉèÖÃ
+ 	KEY_Init();					//æŒ‰é”®åˆå§‹åŒ–  
+	W25QXX_Init();				//åˆå§‹åŒ–W25Q128
+	WM8978_Init();				//åˆå§‹åŒ–WM8978
+	WM8978_HPvol_Set(40,40);	//è€³æœºéŸ³é‡è®¾ç½®
+	WM8978_SPKvol_Set(50);		//å–‡å­éŸ³é‡è®¾ç½®
 	
-	my_mem_init(SRAMIN);		//³õÊ¼»¯ÄÚ²¿ÄÚ´æ³Ø 
-	my_mem_init(SRAMCCM);		//³õÊ¼»¯CCMÄÚ´æ³Ø 
-	exfuns_init();				//ÎªfatfsÏà¹Ø±äÁ¿ÉêÇëÄÚ´æ  
-  	f_mount(fs[0],"0:",1); 		//¹ÒÔØSD¿¨ 
-	while(font_init()); 			//¼ì²é×Ö¿â 	    
+	my_mem_init(SRAMIN);		//åˆå§‹åŒ–å†…éƒ¨å†…å­˜æ±  
+	my_mem_init(SRAMCCM);		//åˆå§‹åŒ–CCMå†…å­˜æ±  
+	exfuns_init();				//ä¸ºfatfsç›¸å…³å˜é‡ç”³è¯·å†…å­˜  
+  	f_mount(fs[0],"0:",1); 		//æŒ‚è½½SDå¡ 
+	while(font_init()); 			//æ£€æŸ¥å­—åº“ 	    
 	while(1)
 	{ 
 		audio_play();
