@@ -37,7 +37,7 @@ These people may be interested in it:
 
 2.Interest in audio decoding       
 note:
-Part of the code belongs to 正点原子@ALIENTEK,if it involves copyright issues please contact me:   
+Part of the code belongs to 正点原子@ALIENTEK,if it involves copyright issues please contact me by:   
 saijaylu@gmail.com
 
 
