@@ -35,7 +35,10 @@ These people may be interested in it:
 
 1.Interested in embedding                              
 
-2.Interest in audio decoding       
+2.Interested in audio decoding       
+3.Interested in fatfs fileSystem      
+
+
 note:
 Part of the code belongs to 正点原子@ALIENTEK,if it involves copyright issues please contact me by:   
 saijaylu@gmail.com
